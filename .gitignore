@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Node dependencies
+node_modules/
+npm-debug.log*
+
+# Hugo compilation output
+public/
+resources/
+.hugo_build.lock
+
+# Local dev server cache
+.wrangler/
