@@ -1,0 +1,36 @@
+name: Weekly Static GTFS Sync & Deploy
+
+on:
+  schedule:
+    # Runs at 00:00 every Sunday (UTC)
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - main # Still deploys instantly if you manually change frontend code
+  workflow_dispatch: # Allows you to click a button in GitHub to force a sync manually
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Project Workspace
+        run: npm install
+
+      - name: Execute Automated Static Ingestion Script
+        # This calls your bash script which downloads the zip, unzips, and runs parse-shapes.js
+        run: bash .devcontainer/setup.sh
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public --project-name="kchbasmy-tracker"
