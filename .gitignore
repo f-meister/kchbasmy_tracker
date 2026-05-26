@@ -153,3 +153,25 @@ resources/
 
 # Local dev server cache
 .wrangler/
+
+# Generated Transit Pipeline Assets
+assets/data/routes_paths.json
+assets/data/stops_locations.json
+assets/data/route_stops_index.json
+static/data/trip_lookup.json
+
+# Temporary directory where raw GTFS zip files are extracted
+tmp-gtfs/
+
+# Cypress e2e testing artifacts
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
