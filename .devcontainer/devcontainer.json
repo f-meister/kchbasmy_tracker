@@ -11,8 +11,8 @@
     }
   },
 
-  // Install system dependencies for both Protobuf compiler AND Cypress headless runner, include setup script run
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y protobuf-compiler libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb && [ ! -f package.json ] && npm init -y || true && bash .devcontainer/setup.sh",
+  // Structured chain execution sequence to handle Linux packages, local Node modules, and initial data parsing automatically
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y protobuf-compiler libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb && [ ! -f package.json ] && npm init -y || true && npm install --save-dev wrangler cypress gtfs-realtime-bindings && bash .devcontainer/setup.sh",
 
   // Configure VS Code settings and pre-load your extensions
   "customizations": {
@@ -26,7 +26,7 @@
       "extensions": [
         "drblury.protobuf-vsc",         // Advanced Protobuf schema support & formatting
         "anotak.protobuf-inspector",    // Live inline proto binary parsing layout
-        "rangav.vscode-thunder-client",   // GUI-based API client for checking data.gov.my payloads
+        "rangav.vscode-thunder-client", // GUI-based API client for checking data.gov.my payloads
         "bep.hugo-shortcodes",          // Autocomplete helper for Hugo shortcodes
         "sheinsight.cypress-io"         // Run and debug Cypress tests directly from VS Code UI
       ]
@@ -37,7 +37,7 @@
   // 1313: Standard Hugo Server
   // 8788: Cloudflare Wrangler Pages local emulation (Frontend + Functions)
   // 3000: Node.js express backup server
-  // 6080: Cypress Test Runner (uncomment if you want to run Cypress tests in interactive mode)
+  // 6080: Cypress Test Runner (VNC port for running interactive Cypress tests in container)
   "forwardPorts": [1313, 8788, 3000, 6080],
 
   // Ensure the container runs safely as a non-root user
