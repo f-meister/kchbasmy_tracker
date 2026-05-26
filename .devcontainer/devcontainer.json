@@ -1,0 +1,45 @@
+{
+  "name": "Kuching Bus Tracker Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  
+  // Install Hugo, Go, and Protobuf CLI tools natively into the container features layer
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {},
+    "ghcr.io/devcontainers/features/hugo:1": {
+      "version": "latest",
+      "extended": true
+    }
+  },
+
+  // Install system dependencies for both Protobuf compiler AND Cypress headless runner, include setup script run
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y protobuf-compiler libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb && [ ! -f package.json ] && npm init -y || true && bash .devcontainer/setup.sh",
+
+  // Configure VS Code settings and pre-load your extensions
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.associations": {
+          "*.proto": "protobuf"
+        }
+      },
+      "extensions": [
+        "drblury.protobuf-vsc",         // Advanced Protobuf schema support & formatting
+        "anotak.protobuf-inspector",    // Live inline proto binary parsing layout
+        "rangav.vscode-thunder-client",   // GUI-based API client for checking data.gov.my payloads
+        "bep.hugo-shortcodes",          // Autocomplete helper for Hugo shortcodes
+        "sheinsight.cypress-io"         // Run and debug Cypress tests directly from VS Code UI
+      ]
+    }
+  },
+
+  // Forward local ports to your machine 
+  // 1313: Standard Hugo Server
+  // 8788: Cloudflare Wrangler Pages local emulation (Frontend + Functions)
+  // 3000: Node.js express backup server
+  // 6080: Cypress Test Runner (uncomment if you want to run Cypress tests in interactive mode)
+  "forwardPorts": [1313, 8788, 3000, 6080],
+
+  // Ensure the container runs safely as a non-root user
+  "remoteUser": "node"
+}
