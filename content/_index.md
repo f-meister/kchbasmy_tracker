@@ -1,6 +1,6 @@
 ---
-title: "Kuching bas.my Live Tracker"
-description: "Real-time bus tracking and route mapping for Kuching, Sarawak"
+title: "BAS.MY Kuching Tracker"
+description: "Bus tracking and routes for Kuching, Sarawak"
 layout: "bus-tracker"
 outputs: ["HTML"]
 ---

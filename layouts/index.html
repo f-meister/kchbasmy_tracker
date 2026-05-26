@@ -3,26 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuching bas.my Live Tracker</title>
+    <title>BAS.MY Kuching Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body { margin: 0; padding: 20px; font-family: system-ui, sans-serif; background: #fff; color: #111; }
-        .controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
-        .control-group { display: flex; gap: 8px; align-items: center; }
-        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
-        #map { width: 100%; height: 75vh; min-height: 500px; border-radius: 8px; border: 1px solid #ddd; z-index: 1; }
-        .timer { font-size: 12px; color: #666; font-family: monospace; }
-        .toggle-btn { display: flex; gap: 10px; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e7eb; font-size: 14px; }
-    </style>
+    /* 1. Global Reset & Body Background */
+    body {
+        background-color: #1e293b; /* Blowfish Main Theme Dark Slate */
+        color: #f8fafc;            /* Off-white readable text layer */
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        margin: 0;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* 2. Header Typography */
+    h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        margin-bottom: 24px;
+        color: #f8fafc;
+    }
+
+    /* 3. Main Layout Constraints */
+    .tracker-container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* 4. Controls Main Flex Row (Your Original Setup) */
+    .controls { 
+        margin-bottom: 15px; 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 20px; 
+        align-items: center; 
+        color: #f8fafc; /* Forces general label text strings to explicit off-white */
+    }
+
+    .control-group { 
+        display: flex; 
+        gap: 8px; 
+        align-items: center; 
+    }
+
+    /* 5. Custom Slate-900 Dropdown Menu Control Overrides */
+    .controls select { 
+        padding: 8px; 
+        border-radius: 4px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        font-size: 14px; 
+        background-color: #0f172a !important; /* Blowfish dark card background */
+        color: #f8fafc !important;            /* High contrast selection text color */
+        cursor: pointer;
+    }
+    
+    /* Fix option dropdown list selections color mapping for Chromium engine panels */
+    .controls select option {
+        background-color: #0f172a;
+        color: #f8fafc;
+    }
+
+    /* 6. Isolated Radio Toggle Pill Capsule Panel Box */
+    .toggle-btn { 
+        display: flex; 
+        gap: 10px; 
+        background: #0f172a; /* Slate-900 contrast card container */
+        padding: 6px 12px; 
+        border-radius: 6px; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        font-size: 14px; 
+        color: #f8fafc;      /* Forces radio option labels to clean off-white */
+    }
+
+    .toggle-btn label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+    }
+
+    .toggle-btn input[type="radio"] {
+        margin: 0;
+        cursor: pointer;
+        accent-color: #3b82f6; /* Modern deep blue toggle pointer dot matching active routes */
+    }
+
+    /* 7. Realtime Sync System State Status Indicator Text */
+    .timer { 
+        font-size: 12px; 
+        color: #94a3b8; /* Tailwind slate-400 muted silver font layout */
+        font-family: monospace; 
+    }
+
+    /* 8. Map Canvas Geometric Bounds Box */
+    #map { 
+        width: 100%; 
+        height: 600px; 
+        border-radius: 8px; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        z-index: 1; 
+    }
+</style>
 </head>
 <body>
 
-    <h1>Kuching bas.my Live Tracker</h1>
+    <h1>BAS.MY KCH</h1>
 
     <div class="controls">
         <div class="control-group">
-            <label for="route-selector"><b>Select Route:</b></label>
+            <label for="route-selector"><b>Route:</b></label>
             <select id="route-selector">
                 <option value="all">Show All Active Buses</option>
             </select>
