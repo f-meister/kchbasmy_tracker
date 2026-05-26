@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuching bas.my Live Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; font-family: system-ui, sans-serif; background: #fff; color: #111; }
+        .controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+        .control-group { display: flex; gap: 8px; align-items: center; }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
+        #map { width: 100%; height: 75vh; min-height: 500px; border-radius: 8px; border: 1px solid #ddd; z-index: 1; }
+        .timer { font-size: 12px; color: #666; font-family: monospace; }
+        .toggle-btn { display: flex; gap: 10px; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e7eb; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h1>Kuching bas.my Live Tracker</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="route-selector"><b>Select Route:</b></label>
+            <select id="route-selector">
+                <option value="all">Show All Active Buses</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <span class="font-weight: bold; font-size: 14px;"><b>Data Feed Source:</b></span>
+            <div class="toggle-btn">
+                <label><input type="radio" name="feed-source" value="live" checked> Live API</label>
+                <label><input type="radio" name="feed-source" value="mock"> Simulation (Mock)</label>
+            </div>
+        </div>
+
+        <span id="refresh-indicator" class="timer">Syncing data streams...</span>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        const map = L.map('map').setView([1.5574, 110.3538], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+        map.createPane('busStopsPane');
+        map.getPane('busStopsPane').style.zIndex = 450; 
+        map.getPane('busStopsPane').style.pointerEvents = 'none';
+
+        const busLayer = L.layerGroup().addTo(map);
+        const pathLayer = L.layerGroup().addTo(map);
+        const stopLayer = L.layerGroup().addTo(map);
+
+        // --- INJECT ALL THREE HUGO STATIC COLLECTIONS ---
+        {{ $paths := resources.Get "data/routes_paths.json" }}
+        {{ $stops := resources.Get "data/stops_locations.json" }}
+        {{ $index := resources.Get "data/route_stops_index.json" }}
+
+        const routesPathsData = {{ if $paths }} {{ $paths.Content | safeJS }} {{ else }} null {{ end }};
+        const stopsData = {{ if $stops }} {{ $stops.Content | safeJS }} {{ else }} null {{ end }};
+        const routeStopsIndex = {{ if $index }} {{ $index.Content | safeJS }} {{ else }} {} {{ end }};
+
+        // 1. Initialize Route Selector Dropdown
+        if (routesPathsData && routesPathsData.features) {
+            const selector = document.getElementById('route-selector');
+            const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode).filter(Boolean);
+            [...new Set(trackingCodes)].sort().forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = `Bus Line: ${code}`;
+                selector.appendChild(opt);
+            });
+        }
+
+        // 2. NEW: Optimized Contextual Stop Filter Core Logic
+        function renderFilteredBusStops(selectedCode) {
+            // Clear the map canvas layer array completely 
+            stopLayer.clearLayers();
+            if (!stopsData || !stopsData.features) return;
+
+            let targetFeatures = stopsData.features;
+
+            // If a specific line is selected (e.g., Q01), slice out matching stop IDs only
+            if (selectedCode !== 'all') {
+                const validStopIds = routeStopsIndex[selectedCode] || [];
+                targetFeatures = stopsData.features.filter(f => validStopIds.includes(f.properties.stop_id));
+            }
+
+            // Plot only the matched elements onto our z-indexed pane layer
+            L.geoJSON({ type: "FeatureCollection", features: targetFeatures }, {
+                pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+                    radius: 8, weight: 2, fillColor: "#10b981", color: "#ffffff", fillOpacity: 0.9, pane: 'busStopsPane'
+                }).bindPopup(`
+                    <div style="font-family: system-ui, sans-serif; padding: 2px;">
+                        <span style="color: #666; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Transit Station</span>
+                        <strong style="color: #111; font-size: 13px;">${feature.properties.stopName}</strong>
+                    </div>
+                `, { maxWidth: 250 })
+            }).addTo(stopLayer);
+        }
+
+        // 3. Draw Route Paths (Updated with Automatic Street-Snapping)
+        function renderSelectedRouteLine(code) {
+            pathLayer.clearLayers();
+            if (code === 'all' || !routesPathsData) return;
+
+            const features = routesPathsData.features.filter(f => f.properties.routeCode === code);
+            if (features.length === 0) return;
+
+            // Extract the straight coordinates from our static data
+            const rawCoords = features[0].geometry.coordinates; // Array of [lon, lat]
+            
+            // Format coordinates for the OSRM Driving API -> lon,lat;lon,lat...
+            const coordString = rawCoords.map(pt => `${pt[0]},${pt[1]}`).join(';');
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+
+            // Fetch the actual driving route from OSRM
+            fetch(osrmUrl)
+                .then(res => res.json())
+                .then(routingData => {
+                    if (routingData.routes && routingData.routes.length > 0) {
+                        // OSRM returns a perfect GeoJSON line that hugs the actual streets!
+                        const roadSnappedGeoJSON = routingData.routes[0].geometry;
+                        
+                        const polyline = L.geoJSON(roadSnappedGeoJSON, { 
+                            style: { color: '#2563eb', weight: 4, opacity: 0.8 } 
+                        });
+                        pathLayer.addLayer(polyline);
+                        map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+                    } else {
+                        // Fallback to our straight lines if the API fails or goes offline
+                        renderStraightFallback(features);
+                    }
+                })
+                .catch(() => renderStraightFallback(features));
+        }
+
+        // Quick fallback function to keep things stable
+        function renderStraightFallback(features) {
+            const polyline = L.geoJSON(features, { style: { color: '#2563eb', weight: 4, opacity: 0.8 } });
+            pathLayer.addLayer(polyline);
+            map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        }
+
+        // 4. Dynamic Live/Mock Synchronizer (Updated with Custom SVG Bus Markers)
+        function syncLiveBusTracker() {
+            const routeSelection = document.getElementById('route-selector').value;
+            const selectedSource = document.querySelector('input[name="feed-source"]:checked').value;
+            
+            document.getElementById('refresh-indicator').textContent = "Syncing positions...";
+            const apiEndpoint = selectedSource === 'mock' ? '/api/buses?mock=true' : '/api/buses';
+
+            // Define our inline custom SVG Bus Icon
+            // Using L.divIcon allows us to embed clean vector assets without calling external image files
+            const busIcon = L.divIcon({
+                html: `
+                    <div style="
+                        background-color: #2563eb; 
+                        color: #ffffff; 
+                        width: 34px; 
+                        height: 34px; 
+                        border-radius: 50%; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+                        border: 2px solid #ffffff;
+                    ">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1M6 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM16 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
+                        </svg>
+                    </div>
+                `,
+                className: 'custom-bus-marker', // Clears Leaflet's default white background wrapper styles
+                iconSize: [34, 34],
+                iconAnchor: [17, 17], // Centers the click footprint directly on the geographic coordinate point
+                popupAnchor: [0, -17]  // Positions the popup cleanly right above the bus circle roof
+            });
+
+            fetch(apiEndpoint)
+                .then(res => res.json())
+                .then(buses => {
+                    busLayer.clearLayers();
+                    const targetBuses = Array.isArray(buses) ? buses : [];
+                    const filtered = routeSelection === 'all' ? targetBuses : targetBuses.filter(b => b.routeCode === routeSelection);
+
+                    filtered.forEach(bus => {
+                        // --- APPLY THE BUS ICON HERE ---
+                        L.marker([bus.latitude, bus.longitude], { icon: busIcon })
+                         .bindPopup(`
+                            <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px;">
+                                <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Active Vehicle Stream</span>
+                                <strong style="font-size: 15px; color: #111; display: block; margin-bottom: 5px;">Bus Code: ${bus.routeCode}</strong>
+                                <strong>Vehicle ID:</strong> ${bus.vehicleNumber}<br/>
+                                <strong>Destination:</strong> ${bus.routeName}<br/>
+                                <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">Source: ${selectedSource.toUpperCase()}</span>
+                            </div>
+                         `, { maxWidth: 250 })
+                         .addTo(busLayer);
+                    });
+                    document.getElementById('refresh-indicator').textContent = `Last sync (${selectedSource}): ${new Date().toLocaleTimeString()}`;
+                })
+                .catch(() => {
+                    document.getElementById('refresh-indicator').textContent = "Sync execution failure";
+                });
+        }
+
+        // Bind our master event switch matrix listener
+        document.getElementById('route-selector').addEventListener('change', (e) => {
+            const code = e.target.value;
+            renderSelectedRouteLine(code);
+            renderFilteredBusStops(code); // <-- Triggers our new smart filter
+            syncLiveBusTracker();
+        });
+
+        document.querySelectorAll('input[name="feed-source"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                syncLiveBusTracker();
+            });
+        });
+
+        // Initialize baseline display outputs 
+        renderFilteredBusStops('all'); // Show all on initial page load layout
+        syncLiveBusTracker();
+        setInterval(syncLiveBusTracker, 600000); 
+    </script>
+</body>
+</html>

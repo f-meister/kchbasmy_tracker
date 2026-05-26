@@ -1,0 +1,108 @@
+{{ define "main" }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<article class="max-w-full prose dark:prose-invert">
+    <div class="mb-4 flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex items-center gap-2">
+            <label for="route-selector" class="font-bold text-sm">Select Route:</label>
+            <select id="route-selector" class="bg-neutral-100 dark:bg-neutral-800 border rounded p-2 text-sm">
+                <option value="all">Show All Active Buses</option>
+            </select>
+        </div>
+        <span id="refresh-indicator" class="text-xs text-neutral-500 font-mono">Syncing data streams...</span>
+    </div>
+
+    <div id="map" class="w-full rounded-lg shadow-md border" style="height: 70vh; min-height: 500px; z-index: 1;"></div>
+</article>
+
+<script>
+    const map = L.map('map').setView([1.5574, 110.3538], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+    const busLayer = L.layerGroup().addTo(map);
+    const pathLayer = L.layerGroup().addTo(map);
+    const stopLayer = L.layerGroup().addTo(map);
+
+    let routesPathsData = null;
+
+    // Load static relational components from Hugo asset generation pipelines
+    {{ $paths := resources.Get "data/routes_paths.json" }}
+    {{ $stops := resources.Get "data/stops_locations.json" }}
+    
+    {{ if $paths }} routesPathsData = {{ $paths.Content | safeJS }}; {{ end }}
+    
+    // 1. Populate UI selectors and render bus stop markers
+    if (routesPathsData) {
+        const selector = document.getElementById('route-selector');
+        const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode);
+        [...new Set(trackingCodes)].sort().forEach(code => {
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = `Bus Line: ${code}`;
+            selector.appendChild(opt);
+        });
+    }
+
+    {{ if $stops }}
+        const stopsData = {{ $stops.Content | safeJS }};
+        L.geoJSON(stopsData, {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+                radius: 5, fillColor: "#10b981", color: "#fff", weight: 1, fillOpacity: 0.8
+            }).bindPopup(`<b>Bus Stop:</b> ${feature.properties.stopName}`)
+        }).addTo(stopLayer);
+    {{ end }}
+
+    // 2. Draw static route lines based on selection
+    function renderSelectedRouteLine(code) {
+        pathLayer.clearLayers();
+        if (code === 'all' || !routesPathsData) return;
+
+        const features = routesPathsData.features.filter(f => f.properties.routeCode === code);
+        if (features.length > 0) {
+            const polyline = L.geoJSON(features, { style: { color: '#2563eb', weight: 5, opacity: 0.8 } });
+            pathLayer.addLayer(polyline);
+            map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        }
+    }
+
+    // 3. Fetch real-time bus metrics and sync positions
+    function syncLiveBusTracker() {
+        const selection = document.getElementById('route-selector').value;
+        document.getElementById('refresh-indicator').textContent = "Syncing positions...";
+
+        fetch('/api/buses')
+            .then(res => res.json())
+            .then(buses => {
+                busLayer.clearLayers();
+                const filtered = selection === 'all' ? buses : buses.filter(b => b.routeCode === selection);
+
+                filtered.forEach(bus => {
+                    L.marker([bus.latitude, bus.longitude])
+                     .bindPopup(`
+                        <div class="text-xs font-sans">
+                            <strong>Bus Code:</strong> ${bus.routeCode}<br/>
+                            <strong>Vehicle ID:</strong> ${bus.vehicleNumber}<br/>
+                            <strong>Destination:</strong> ${bus.routeName}
+                        </div>
+                     `).addTo(busLayer);
+                });
+                
+                const now = new Date().toLocaleTimeString();
+                document.getElementById('refresh-indicator').textContent = `Last sync: ${now}`;
+            })
+            .catch(() => document.getElementById('refresh-indicator').textContent = "Sync execution failure");
+    }
+
+    document.getElementById('route-selector').addEventListener('change', (e) => {
+        renderSelectedRouteLine(e.target.value);
+        syncLiveBusTracker();
+    });
+
+    // Run the initial data synchronization
+    syncLiveBusTracker();
+    
+    // Periodically update bus positions every 10 minutes (600,000 ms)
+    setInterval(syncLiveBusTracker, 600000);
+</script>
+{{ end }}
