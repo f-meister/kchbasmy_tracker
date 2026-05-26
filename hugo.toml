@@ -1,3 +1,17 @@
 baseURL = 'https://example.org/'
 locale = 'en-us'
 title = 'My New Hugo Project'
+
+[security]
+  enableInlineShortcodes = false
+
+  [security.exec]
+    allow = ['^npx$', '^node$', '^git$']
+
+  # 1. Open the OS gate to read Cloudflare variables
+  [security.os]
+    allowEnv = ['^CF_PAGES_BRANCH$', '^HUGO_']
+
+  # 2. Open the Template Function gate so getenv() can process it
+  [security.funcs]
+    getenv = ['^HUGO_', '^CI$', '^CF_PAGES_BRANCH$']
