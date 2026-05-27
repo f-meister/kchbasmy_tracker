@@ -1,7 +1,4 @@
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
-
-// Import the dummy file directly from root data folder ---
-// Relative path from /functions/api/ to /data/test/
 import mockPayload from '../../data/test/dummy_bus_loc.json';
 
 export async function onRequest(context) {
@@ -9,25 +6,45 @@ export async function onRequest(context) {
   const useMock = url.searchParams.get('mock') === 'true';
   const API_URL = "https://api.data.gov.my/gtfs-realtime/vehicle-position/mybas-kuching";
 
+  // --- EDGE CACHE INTERCEPT LAYER ---
+  // We check Cloudflare's default global cache memory first (skip for active simulation testing)
+  const cache = caches.default;
+  if (!useMock) {
+    const cachedResponse = await cache.match(context.request);
+    if (cachedResponse) {
+      console.log("⚡ Cloudflare Cache Hit: Returning live transit arrays instantly from the edge!");
+      return cachedResponse;
+    }
+  }
+  // ----------------------------------
+
   try {
-    let rawFeedData;
-    
     // 1. Core Data Routing Switch Layer
     if (useMock) {
       console.log("🛠️ Mock Flag Detected: Ingesting dummy simulation payload natively...");
-      
-      // We pass the imported JSON object's entity array straight into our parser
       return processFeedEntities(mockPayload.entity, url.origin);
     } else {
       // Standard Production Route: Stream live binary footprint from government API
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("Live realtime endpoint unreachable");
+      
       const arrayBuffer = await response.arrayBuffer();
       const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(arrayBuffer));
-      return processFeedEntities(feed.entity, url.origin);
+      
+      // Compute fresh records
+      const freshResponse = await processFeedEntities(feed.entity, url.origin);
+      
+      // Store the successful response into Cloudflare's CDN cache memory block before returning it
+      // Cloudflare reads the max-age header automatically to set the expiration window
+      context.waitUntil(cache.put(context.request, freshResponse.clone()));
+      
+      return freshResponse;
     }
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
 
@@ -60,7 +77,8 @@ async function processFeedEntities(entities, originUrl) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=10" // Drop caching down to 10 seconds for active testing iterations
+      // cache-control tells both the client browser AND the cloudflare cache intercept layer to lock data for 30s
+      "Cache-Control": "public, max-age=30" 
     }
   });
 }

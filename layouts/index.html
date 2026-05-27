@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAS.MY KCH</title>
+    <title>BAS.MY KCH Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -111,13 +111,20 @@
 <body>
 
     <div class="tracker-container" id="app-shell" data-branch="{{ getenv "CF_PAGES_BRANCH" }}">
-        <h1>BAS.MY KCH</h1>
+        <h2 style="display: flex; align-items: center; gap: 10px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1" />
+                <circle cx="6" cy="18" r="2" />
+                <circle cx="16" cy="18" r="2" />
+            </svg>
+            <span>BAS.MY KCH Tracker</span>
+        </h2>
         
         <div class="controls">
             <div class="control-group">
-                <label for="route-selector"><b>Route:</b></label>
+                <label for="route-selector"><b>Bus Route:</b></label>
                 <select id="route-selector">
-                    <option value="all">Show All Active Buses</option>
+                    <option value="all">All Active Buses</option>
                 </select>
             </div>
 
@@ -175,7 +182,7 @@
             [...new Set(trackingCodes)].sort().forEach(code => {
                 const opt = document.createElement('option');
                 opt.value = code;
-                opt.textContent = `Bus Line: ${code.toUpperCase()}`;
+                opt.textContent = `${code.toUpperCase()}`;
                 selector.appendChild(opt);
             });
         }
