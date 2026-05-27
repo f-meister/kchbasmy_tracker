@@ -105,7 +105,7 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       .and('have.attr', 'href').and('not.eq', '#');
 
     cy.get('#timetable-link-text')
-      .should('have.text', `${targetRoute} Full Timetable`);
+      .should('have.text', `Click here for ${targetRoute} Transit Map`);
 
     cy.get('#route-selector').select('all');
     cy.get('#timetable-link-container').should('not.be.visible');
@@ -144,4 +144,13 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
     cy.get('#info-modal-overlay').should('not.be.visible');
     cy.get('body').should('not.have.css', 'overflow', 'hidden');
   });
+
+  it('should visually render the dark map map legend context over the Leaflet grid canvas', () => {
+    // Confirms the legend container mounted successfully into the bottom-right control pane
+    cy.get('.map-legend')
+      .should('be.visible')
+      .and('contain.text', 'Bus Stop')
+      .and('contain.text', 'Active Bus');
+  });
+
 });
