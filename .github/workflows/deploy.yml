@@ -36,6 +36,8 @@ jobs:
       
       - name: Compile Hugo Assets Manually
         run: hugo --minify
+        env:
+          CF_PAGES_BRANCH: ${{ github.ref_name }}
 
       # --- PIPELINE INTEGRATION: VERIFICATION LAYER ---
       - name: Execute Headless Cypress End-to-End Suite
@@ -66,4 +68,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy public --project-name="kchbasmy-tracker" --branch="main"
+          command: pages deploy public --project-name="kchbasmy-tracker" --branch="${{ github.ref_name }}"
