@@ -1,0 +1,69 @@
+name: Daily Static GTFS Sync & Deploy
+
+on:
+  schedule:
+    # Runs every day at 19:00 UTC (which corresponds exactly to 03:00 AM GMT+8 Malaysia Time)
+    - cron: '0 19 * * *'
+  push:
+    branches:
+      - main
+      - dev # Trigger runs on dev pushes to execute verification tests
+  workflow_dispatch: # Allows you to click a button in GitHub to force a sync manually
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Project Workspace
+        run: npm install
+
+      - name: Execute Automated Static Ingestion Script
+        run: bash .devcontainer/setup.sh
+
+      - name: Setup Hugo Compiler
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true # Essential if you use Sass/SCSS features down the road
+      
+      - name: Compile Hugo Assets Manually
+        run: hugo --minify
+
+      # --- PIPELINE INTEGRATION: VERIFICATION LAYER ---
+      - name: Execute Headless Cypress End-to-End Suite
+        uses: cypress-io/github-action@v6
+        with:
+          # Starts local wrangler dev/pages server in the background
+          start: npm run start
+          # Wait explicitly for Hugo tracker sub-route path to return 200 OK
+          wait-on: 'http://localhost:8788'
+          wait-on-timeout: 30
+        env:
+          # This forces Cypress's internal wait-on utility tool to accept 404 statuses as alive
+          WAIT_ON_STATUS_TYPE: 'any'
+
+      - name: Archive Cypress Failure Screen Captures
+        uses: actions/upload-artifact@v4
+        if: failure() # Captures viewport snapshots only if a test fails
+        with:
+          name: cypress-error-snapshots
+          path: cypress/screenshots
+          retention-days: 7
+
+      # --- GATE-CHECKED DEPLOYMENT DELIVERY LAYER ---
+      - name: Deploy to Cloudflare Pages
+        # Only allows the deployment block to execute if the build is on the main branch
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public --project-name="kchbasmy-tracker"
