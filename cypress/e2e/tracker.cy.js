@@ -1,5 +1,5 @@
 describe('Kuching Bus Tracker Pipeline Verification', () => {
-  // Define a stable mock payload matching your buses.js schema
+  // Stable mock payload matching your buses.js schema
   const mockBusesResponse = [
     {
       id: "mock-vehicle-1",
@@ -33,7 +33,7 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       headers: { 'access-control-allow-origin': '*' }
     }).as('getLiveBuses');
 
-    // 2. Clear network states and load the page layout
+    // 2. Visit the absolute baseline origin of the local preview server
     cy.visit('/');
   });
 
@@ -43,19 +43,21 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       .and('have.class', 'leaflet-container');
   });
 
-  it('should load routes_paths.json and populate the dropdown with proper keys', () => {
+  it('should load routes_paths.json and populate the dropdown with clean route codes', () => {
+    // Verifies that options are short and un-cluttered (e.g. "Q01", not "Q01 - Description")
     cy.get('#route-selector', { timeout: 10000 })
       .should('be.visible')
       .find('option')
       .should('have.length.greaterThan', 1)
       .then(($options) => {
-        const text = $options.map((i, el) => el.value).get();
+        const text = $options.map((i, el) => el.text.trim()).get();
         expect(text).to.include('Q01');
+        // Ensure it doesn't accidentally contain the longer hyphen description inside the option tag
+        expect(text[1]).to.not.include('—'); 
       });
   });
 
   it('should securely handle and display the mocked real-time API payload', () => {
-    // 3. Confirm Cypress caught the stubbed network event successfully
     cy.wait('@getLiveBuses', { timeout: 10000 }).then((interception) => {
       expect(interception.response.statusCode).to.eq(200);
       expect(interception.response.body).to.be.an('array');
@@ -65,6 +67,26 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       expect(sampleBus.routeCode).to.eq('Q01');
       expect(sampleBus.vehicleNumber).to.eq('HW 1234');
     });
+  });
+
+  // --- UPDATED UX FEATURE: INLINE ROUTE LONG NAME VERIFICATION ---
+  it('should dynamically render the route long name next to the dropdown when a route is active', () => {
+    const targetRoute = 'Q12';
+
+    // 1. The inline description should start completely hidden when "All" is active
+    cy.get('#route-description-text').should('not.be.visible');
+
+    // 2. Select an active route route code from the selector
+    cy.get('#route-selector').select(targetRoute);
+
+    // 3. The label should become visible and dynamically inherit the descriptive route name from geojson properties
+    cy.get('#route-description-text')
+      .should('be.visible')
+      .and('not.have.css', 'opacity', '0')
+
+    // 4. Changing selection back to "all" should trigger a clean fade out lifecycle pass
+    cy.get('#route-selector').select('all');
+    cy.get('#route-description-text').should('not.be.visible');
   });
 
   it('should dynamically reveal the correct timetable link when an explicit route is selected', () => {
@@ -102,7 +124,7 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       .and('contain.text', 'Live Map for BAS.MY in Kuching');
     
     cy.get('#info-modal-card a[href*="github.com"]')
-      .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy-tracker')
+      .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy_tracker')
       .and('contain.text', 'View Project on GitHub');
 
     cy.get('#info-modal-card a[href^="mailto:"]')
