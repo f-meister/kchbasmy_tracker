@@ -35,7 +35,7 @@ jobs:
           extended: true # Essential if you use Sass/SCSS features down the road
       
       - name: Compile Hugo Assets Manually
-        run: npx hugo --minify # Ensures public/index.html explicitly exists before Wrangler boots
+        run: hugo --minify
 
       # --- PIPELINE INTEGRATION: VERIFICATION LAYER ---
       - name: Execute Headless Cypress End-to-End Suite
