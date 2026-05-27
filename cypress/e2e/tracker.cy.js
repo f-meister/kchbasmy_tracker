@@ -102,7 +102,7 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       .and('contain.text', 'Live Map for BAS.MY in Kuching');
     
     cy.get('#info-modal-card a[href*="github.com"]')
-      .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy_tracker')
+      .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy-tracker')
       .and('contain.text', 'View Project on GitHub');
 
     cy.get('#info-modal-card a[href^="mailto:"]')
