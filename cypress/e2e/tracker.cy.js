@@ -34,7 +34,7 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
     }).as('getLiveBuses');
 
     // 2. Clear network states and load the page layout
-    cy.visit('/tracker/');
+    cy.visit('/');
   });
 
   it('should visually initialize the Leaflet map element canvas', () => {
@@ -102,7 +102,7 @@ describe('Kuching Bus Tracker Pipeline Verification', () => {
       .and('contain.text', 'Live Map for BAS.MY in Kuching');
     
     cy.get('#info-modal-card a[href*="github.com"]')
-      .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy-tracker')
+      .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy_tracker')
       .and('contain.text', 'View Project on GitHub');
 
     cy.get('#info-modal-card a[href^="mailto:"]')

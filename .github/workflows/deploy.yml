@@ -36,7 +36,7 @@ jobs:
           # Starts local wrangler dev/pages server in the background
           start: npm run start
           # Wait explicitly for Hugo tracker sub-route path to return 200 OK
-          wait-on: 'http://localhost:8788/tracker/'
+          wait-on: 'http-get://localhost:8788'
           wait-on-timeout: 30
 
       - name: Archive Cypress Failure Screen Captures
