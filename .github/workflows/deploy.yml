@@ -1,9 +1,9 @@
-name: Weekly Static GTFS Sync & Deploy
+name: Daily Static GTFS Sync & Deploy
 
 on:
   schedule:
-    # Runs at 00:00 every Sunday (UTC)
-    - cron: '0 0 * * 0'
+    # Runs every day at 16:00 UTC (which corresponds exactly to 0300 GMT+8)
+    - cron: '0 19 * * *'
   push:
     branches:
       - main # Still deploys instantly if you manually change frontend code
