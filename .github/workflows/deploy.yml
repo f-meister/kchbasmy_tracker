@@ -33,9 +33,10 @@ jobs:
       - name: Execute Headless Cypress End-to-End Suite
         uses: cypress-io/github-action@v6
         with:
-          # Starts your local wrangler dev/pages server in the background
+          # Starts local wrangler dev/pages server in the background
           start: npm run start
-          wait-on: 'http://localhost:8788'
+          # Wait explicitly for Hugo tracker sub-route path to return 200 OK
+          wait-on: 'http://localhost:8788/tracker/'
           wait-on-timeout: 30
 
       - name: Archive Cypress Failure Screen Captures
