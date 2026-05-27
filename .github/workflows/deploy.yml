@@ -28,6 +28,12 @@ jobs:
       - name: Execute Automated Static Ingestion Script
         run: bash .devcontainer/setup.sh
 
+      - name: Setup Hugo Compiler
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true # Essential if you use Sass/SCSS features down the road
+      
       - name: Compile Hugo Assets Manually
         run: npx hugo --minify # Ensures public/index.html explicitly exists before Wrangler boots
 
