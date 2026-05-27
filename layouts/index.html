@@ -122,10 +122,17 @@
         
         <div class="controls">
             <div class="control-group">
-                <label for="route-selector"><b>Bus Route:</b></label>
+                <label for="route-selector"><b>Bus:</b></label>
                 <select id="route-selector">
                     <option value="all">All Active Buses</option>
                 </select>
+            </div>
+
+            <div class="control-group" id="timetable-link-container" style="display: none;">
+                <a id="route-timetable-link" href="#" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; font-size: 13px; font-weight: 600; text-decoration: underline; display: flex; align-items: center; gap: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <span id="timetable-link-text">Full Timetable</span>
+                </a>
             </div>
 
             <div class="control-group" id="feed-control-wrapper">
@@ -176,6 +183,13 @@
         const stopsData = {{ if $stops }} {{ $stops.Content | safeJS }} {{ else }} null {{ end }};
         const routeStopsIndex = {{ if $index }} {{ $index.Content | safeJS }} {{ else }} {} {{ end }};
 
+        // --- BUILD-TIME NATIVE YAML INGESTION LAYER ---
+        const timetableMap = {};
+        {{ range hugo.Data.timetable_map.timetable_map }}
+        timetableMap["{{ .route | lower }}"] = "{{ .link | safeJS }}";
+        {{ end }}
+        // ----------------------------------------------
+
         if (routesPathsData && routesPathsData.features) {
             const selector = document.getElementById('route-selector');
             const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode).filter(Boolean);
@@ -185,6 +199,26 @@
                 opt.textContent = `${code.toUpperCase()}`;
                 selector.appendChild(opt);
             });
+        }
+
+        // Evaluate and update timetable anchor tags
+        function updateTimetableLink(selectedRoute) {
+            const container = document.getElementById('timetable-link-container');
+            const anchor = document.getElementById('route-timetable-link');
+            const linkText = document.getElementById('timetable-link-text');
+            
+            if (!container || !anchor || !linkText) return;
+
+            const cleanRouteKey = selectedRoute.trim().toLowerCase();
+            const activeLink = timetableMap[cleanRouteKey];
+
+            if (selectedRoute === 'all' || !activeLink) {
+                container.style.display = 'none';
+            } else {
+                anchor.href = activeLink;
+                linkText.textContent = `${selectedRoute.toUpperCase()} Full Timetable`;
+                container.style.display = 'inline-flex';
+            }
         }
 
         function renderFilteredBusStops(selectedCode) {
@@ -300,6 +334,7 @@
 
         document.getElementById('route-selector').addEventListener('change', (e) => {
             const code = e.target.value;
+            updateTimetableLink(code);
             renderSelectedRouteLine(code);
             renderFilteredBusStops(code);
             syncLiveBusTracker();
