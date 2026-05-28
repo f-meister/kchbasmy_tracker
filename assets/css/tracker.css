@@ -1,0 +1,517 @@
+body {
+    background-color: #1e293b;
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+    color: #f8fafc;
+}
+
+.tracker-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.controls { 
+    margin-bottom: 15px; 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 20px; 
+    align-items: center; 
+    color: #f8fafc;
+}
+
+.control-group { 
+    display: flex; 
+    gap: 8px; 
+    align-items: center; 
+}
+
+.controls select { 
+    padding: 8px; 
+    border-radius: 4px; 
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    font-size: 14px; 
+    background-color: #0f172a !important; 
+    color: #f8fafc !important; 
+}
+
+.controls select option {
+    background-color: #0f172a;
+    color: #f8fafc;
+}
+
+/* Sleek descriptive line layout placeholder next to select dropdown */
+#route-description-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #94a3b8;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Target the data feed container block safely */
+#feed-control-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toggle-btn { 
+    display: flex; 
+    gap: 10px; 
+    background: #0f172a; 
+    padding: 6px 12px; 
+    border-radius: 6px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    font-size: 14px; 
+    color: #f8fafc; 
+}
+
+.toggle-btn label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.toggle-btn input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.timer { 
+    font-size: 12px; 
+    color: #94a3b8; 
+    font-family: monospace; 
+}
+
+/* Custom Map Legend Styling */
+.map-legend {
+    background-color: #0f172a !important; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #f8fafc;
+    font-family: system-ui, sans-serif;
+    font-size: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 1.2;
+    z-index: 9999 !important; 
+    max-width: 140px; 
+    pointer-events: auto; 
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-marker-stop {
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.legend-marker-bus {
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#map { 
+    width: 100%; 
+    height: 600px; 
+    border-radius: 8px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    z-index: 1; 
+}
+
+/* Mobile Responsive Bottom Sheet Override Strategy */
+@media (max-width: 640px) {
+    #info-modal-overlay {
+        align-items: flex-end !important; 
+    }
+    #info-modal-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important; 
+        padding: 24px 24px 40px 24px !important; 
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* --- HEADER & BRANDING LAYOUTS --- */
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.brand-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    color: #3b82f6;
+}
+
+/* --- PROJECT INFO MODAL TRIGGER BUTTON --- */
+#info-modal-trigger {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+/* Replaces old JavaScript onmouseover event */
+#info-modal-trigger:hover {
+    color: #3b82f6;
+    background-color: #f1f5f9;
+}
+
+/* --- CONTROLS INLINE SYSTEM OVERRIDES --- */
+#route-description-text {
+    display: none;
+    opacity: 0;
+    padding-left: 4px;
+}
+
+#timetable-link-container {
+    display: none;
+}
+
+#route-timetable-link {
+    color: #3b82f6;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* --- INFO MODAL OVERLAY & CARD CONTAINER --- */
+#info-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.6);
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+#info-modal-card {
+    background-color: #ffffff;
+    width: 90%;
+    max-width: 480px;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+/* --- MODAL HEADER SECTIONS --- */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+}
+
+.modal-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#info-modal-close {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+#info-modal-close:hover {
+    color: #0f172a;
+}
+
+/* --- MODAL CONTENT BODY TYPOGRAPHY --- */
+.modal-body {
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-body p {
+    margin: 0;
+}
+
+.modal-features-box {
+    background-color: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.modal-features-box strong {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #2563eb;
+    margin-bottom: 4px;
+}
+
+.modal-contact-section {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 16px;
+    margin-top: 4px;
+}
+
+.modal-contact-section strong {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.modal-links-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* --- SOCIAL LINKS & INTERACTION ACTION LAYERS --- */
+.modal-btn-github {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #0f172a;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    font-size: 13px;
+}
+
+.modal-btn-github:hover {
+    background-color: #1e293b;
+}
+
+.modal-btn-email {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f1f5f9;
+    color: #334155;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 13px;
+}
+
+.modal-btn-email:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
+}
+
+.modal-footer-note {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* --- BUS STOP POPUP & BADGE STYLES --- */
+.stop-popup-content {
+    font-family: system-ui, -apple-system, sans-serif;
+    padding: 2px;
+    color: #0f172a;
+}
+
+.popup-label-type {
+    color: #64748b;
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.popup-stop-title {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.popup-routes-list-wrapper {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 6px;
+    margin-top: 4px;
+}
+
+.popup-routes-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.popup-badges-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.popup-route-badge {
+    background-color: #3b82f6;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    display: inline-block;
+}
+
+/* --- MAIN HUB TERMINAL STATION CUSTOM POPUPS --- */
+.popup-label-terminal {
+    color: #2563eb !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em;
+}
+
+.popup-title-terminal {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #0f172a;
+}
+
+/* Optional: Subtle drop-shadow pop effect to help larger terminal nodes pop cleanly on high-zoom tile layers */
+.main-terminal-pulse {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+/* --- BUS ICON SVG USE INSTANCE DIMENSION MATRICES --- */
+.brand-icon {
+    width: 20px;
+    height: 20px;
+    color: white;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.legend-svg-use {
+    width: 10px;
+    height: 10px;
+    display: block;
+}
+
+.map-svg-use {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* --- UNIFORM BRANDING BUS ELEMENT LAYOUTS --- */
+.legend-bus-icon-preview {
+    background-color: #2563eb;
+    color: #ffffff;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border: 1.4px solid #ffffff;
+    margin-left:-1px; /* Slight negative margin to visually center the smaller bus icon within the legend item */
+    margin-right: -2px; /* Negative margin to visually center the smaller bus icon within the legend item */
+}
+
+.map-active-bus-marker {
+    background-color: #2563eb; 
+    color: #ffffff; 
+    width: 34px; 
+    height: 34px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3); 
+    border: 2px solid #ffffff;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* --- INLINE ROUTE ONBOARDING PROMPT --- */
+#route-description-text.route-prompt-text {
+    color: #94a3b8 !important; /* Non-intrusive slate gray tint */
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    user-select: none;
+}
