@@ -24,6 +24,9 @@ const MOCK_BUSES_RESPONSE = [
   }
 ];
 
+// Centralized dynamic calendar anchor to verify automated copyright year updates
+const TARGET_CALENDAR_YEAR = new Date().getFullYear().toString();
+
 // --- CENTRALIZED REUSABLE BOOTSTRAP ORCHESTRATION ---
 function bootstrapTrackerWorkspace() {
   // 1. Force Cypress to catch the request and return the mock stub instantly
@@ -92,7 +95,7 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#timetable-link-container').should('not.be.visible');
   });
 
-  it('should manage the responsive info modal lifecycle and apply layout window lock rules', () => {
+  it('should manage the responsive info modal lifecycle and assert on automated copyright years', () => {
     cy.get('#info-modal-overlay').should('not.be.visible');
     cy.get('body').should('not.have.css', 'overflow', 'hidden');
 
@@ -101,15 +104,21 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#info-modal-card')
       .should('be.visible')
       .and('contain.text', 'About the Tracker')
-      .and('contain.text', 'Live Map for BAS.MY in Kuching');
+      .and('contain.text', 'Better than the official app!');
+
+    // DYNAMIC COPYRIGHT YEAR PIPELINE VERIFICATION
+    cy.get('#copyright-year')
+      .should('be.visible')
+      .and('have.text', TARGET_CALENDAR_YEAR)
+      .and('not.have.text', '2023');
     
     cy.get('#info-modal-card a[href*="github.com"]')
       .should('have.attr', 'href', 'https://github.com/f-meister/kchbasmy_tracker')
-      .and('contain.text', 'View Project on GitHub');
+      .and('contain.text', 'View GitHub Project');
 
     cy.get('#info-modal-card a[href^="mailto:"]')
       .should('have.attr', 'href', 'mailto:fabian@fabianhee.com')
-      .and('contain.text', 'Email me for feedback or questions');
+      .and('contain.text', 'Feedback/questions here');
 
     cy.get('body').should('have.css', 'overflow', 'hidden');
     cy.get('#info-modal-close').click();
@@ -128,7 +137,7 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('contain.text', 'Bus Stop')
       .and('contain.text', 'Active Bus');
 
-    // Confirms your new custom 15px layout boundaries fit cleanly inside Suite 1
+    // Confirms your custom 15px layout boundaries fit cleanly inside Suite 1
     cy.get('.legend-bus-icon-preview')
       .should('be.visible')
       .and('have.css', 'background-color', 'rgb(37, 99, 235)')
@@ -229,19 +238,6 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
       .and('contain.text', 'Main Station')
       .and('contain.text', 'Active Bus');
 
-    cy.get('.map-legend .legend-marker-stop')
-      .filter((i, el) => el.style.backgroundColor === 'rgb(37, 99, 235)')
-      .should('have.css', 'width', '14px')
-      .and('have.css', 'height', '14px');
-  });
-
-  it('should append the new hierarchical interchange station data models to the legend text mapping', () => {
-    cy.get('.map-legend')
-      .should('be.visible')
-      .and('contain.text', 'Interchange')
-      .and('contain.text', 'Main Station');
-
-    // Asserts that the upscaled blue station swatch matches your 14px map node size matrix
     cy.get('.map-legend .legend-marker-stop')
       .filter((i, el) => el.style.backgroundColor === 'rgb(37, 99, 235)')
       .should('have.css', 'width', '14px')

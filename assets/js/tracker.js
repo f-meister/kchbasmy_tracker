@@ -248,6 +248,13 @@ function renderSelectedRouteLine(code) {
         .catch(() => renderStraightFallback(features));
 }
 
+function injectDynamicCopyrightYear() {
+    const yearElement = document.getElementById('copyright-year');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+}
+
 function renderStraightFallback(features) {
     const polyline = L.geoJSON(features, { style: { color: '#2563eb', weight: 4, opacity: 0.8 } });
     pathLayer.addLayer(polyline);
