@@ -135,6 +135,7 @@
         // 5. Bootstrap execution layers once both global models and DOM elements are mounted
         initializeRouteSelector();
         renderFilteredBusStops('all');
+        updateRouteDescriptionLabel('all', true);
         syncLiveBusTracker();
         setInterval(syncLiveBusTracker, 60000); 
     </script>

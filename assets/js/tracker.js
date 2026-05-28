@@ -100,16 +100,34 @@ function initializeRouteSelector() {
 }
 
 // --- DYNAMIC INLINE DESCRIPTIVE LABEL UPDATE LOGIC ---
-function updateRouteDescriptionLabel(selectedRoute) {
+function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
     const label = document.getElementById('route-description-text');
     if (!label) return;
 
     if (selectedRoute === 'all') {
+        if (isInitialBoot) {
+            label.classList.add('route-prompt-text');
+            label.innerHTML = `◄ Choose the bus route you want to track`;
+            label.style.display = 'inline-block';
+            label.style.opacity = '1';
+            return;
+        }
+
+        // Standard dynamic runtime path (fade out first, then swap content)
         label.style.opacity = '0';
-        setTimeout(() => { label.style.display = 'none'; }, 200);
+        setTimeout(() => {
+            if (document.getElementById('route-selector').value === 'all') {
+                label.classList.add('route-prompt-text');
+                label.innerHTML = `◄ Choose the bus route you want to track`;
+                label.style.display = 'inline-block';
+                void label.offsetWidth; // Trigger reflow
+                label.style.opacity = '1';
+            }
+        }, 200);
     } else {
         const descriptiveName = routeNamesLookup[selectedRoute.toLowerCase()] || '';
         if (descriptiveName) {
+            label.classList.remove('route-prompt-text');
             label.textContent = ` ${descriptiveName}`;
             label.style.display = 'inline-block';
             void label.offsetWidth; 
