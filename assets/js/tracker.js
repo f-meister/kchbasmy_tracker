@@ -46,11 +46,9 @@ legend.onAdd = function () {
                     <span>Main Station</span>
                 </div>
                 <div class="legend-item">
-                    <span class="legend-marker-bus">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1M6 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM16 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
-                        </svg>
-                    </span>
+                    <div class="legend-bus-icon-preview">
+                        <svg class="legend-svg-use"><use href="#icon-bus"></use></svg>
+                    </div>
                     <span>Active Bus</span>
                 </div>
             `;
@@ -252,10 +250,8 @@ function syncLiveBusTracker() {
 
     const busIcon = L.divIcon({
         html: `
-            <div style="background-color: #2563eb; color: #ffffff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1M6 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM16 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
-                </svg>
+            <div class="map-active-bus-marker">
+                <svg class="map-svg-use"><use href="#icon-bus"></use></svg>
             </div>
         `,
         className: 'custom-bus-marker',
