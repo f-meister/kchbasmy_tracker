@@ -21,9 +21,9 @@
 <body>
 
     <div class="tracker-container" id="app-shell" data-branch="{{ getenv "CF_PAGES_BRANCH" }}">
-        <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;">
+        <h3 class="app-header">
+            <div class="brand-wrapper">
+                <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1" />
                     <circle cx="6" cy="18" r="2" />
                     <circle cx="16" cy="18" r="2" />
@@ -31,7 +31,7 @@
                 <span>BAS.MY KCH Tracker</span>
             </div>
 
-            <button id="info-modal-trigger" aria-label="Project Information" style="background: none; border: none; padding: 4px; cursor: pointer; color: #94a3b8; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: color 0.2s, background-color 0.2s;" onmouseover="this.style.color='#3b82f6'; this.style.backgroundColor='#f1f5f9'" onmouseout="this.style.color='#94a3b8'; this.style.backgroundColor='transparent'">
+            <button id="info-modal-trigger" aria-label="Project Information">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
             </button>
         </h3>
@@ -42,11 +42,11 @@
                 <select id="route-selector">
                     <option value="all">All</option>
                 </select>
-                <span id="route-description-text" style="display: none; opacity: 0; padding-left: 4px;"></span>
+                <span id="route-description-text"></span>
             </div>
 
-            <div class="control-group" id="timetable-link-container" style="display: none;">
-                <a id="route-timetable-link" href="#" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; font-size: 13px; font-weight: 600; text-decoration: underline; display: flex; align-items: center; gap: 4px;">
+            <div class="control-group" id="timetable-link-container">
+                <a id="route-timetable-link" href="#" target="_blank" rel="noopener noreferrer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                     <span id="timetable-link-text">Full Timetable</span>
                 </a>
@@ -66,37 +66,44 @@
         <div id="map"></div>
     </div>
 
-    <div id="info-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); z-index: 9999; backdrop-filter: blur(4px); align-items: center; justify-content: center;">
-        <div id="info-modal-card" style="background-color: #ffffff; width: 90%; max-width: 480px; padding: 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); font-family: system-ui, -apple-system, sans-serif; color: #1e293b; position: relative; max-height: 85vh; overflow-y: auto;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-                <h4 style="margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">🗺️ About the Tracker</h4>
-                <button id="info-modal-close" style="background: none; border: none; padding: 4px; cursor: pointer; color: #64748b;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#64748b'">
+    <div id="info-modal-overlay">
+        <div id="info-modal-card">
+            
+            <div class="modal-header">
+                <h4>🇲🇾 About the Tracker</h4>
+                <button id="info-modal-close" aria-label="Close dialog">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
             </div>
-            <div style="font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; gap: 16px;">
-                <p style="margin: 0;">Live Map for BAS.MY in Kuching (better than the official app!)</p>
-                <div style="background-color: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                    <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #2563eb; margin-bottom: 4px;">Features</strong>
+
+            <div class="modal-body">
+                <p>Live Map for BAS.MY in Kuching (better than the official app!)</p>
+                
+                <div class="modal-features-box">
+                    <strong>Features</strong>
                     • Select your bus, check each bus stop and vehicle info!<br>
                     • Check each bus' official timetable!<br>
                     • Live updates every minute!
                 </div>
-                <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 4px;">
-                    <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; font-weight: 700; letter-spacing: 0.05em;">Get in Touch</strong>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <a href="https://github.com/f-meister/kchbasmy_tracker" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 10px; background-color: #0f172a; color: #ffffff; padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background-color 0.2s; font-size: 13px;" onmouseover="this.style.backgroundColor='#1e293b'" onmouseout="this.style.backgroundColor='#0f172a'">
+
+                <div class="modal-contact-section">
+                    <strong>Get in Touch</strong>
+                    <div class="modal-links-wrapper">
+                        <a href="https://github.com/f-meister/kchbasmy_tracker" target="_blank" rel="noopener noreferrer" class="modal-btn-github">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
                             <span>View Project on GitHub</span>
                         </a>
-                        <a href="mailto:fabian@fabianhee.com" style="display: flex; align-items: center; gap: 10px; background-color: #f1f5f9; color: #334155; padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background-color 0.2s, color 0.2s; font-size: 13px;" onmouseover="this.style.backgroundColor='#e2e8f0'; this.style.color='#0f172a';" onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.color='#334155';">
+
+                        <a href="mailto:fabian@fabianhee.com" class="modal-btn-email">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
                             <span>Email me for feedback or questions</span>
                         </a>
                     </div>
                 </div>
-                <p style="margin: 0; font-size: 11px; color: #94a3b8; text-align: center; margin-top: 4px;">This is my personal project. If you like it, feel free to contribute! Also, check out my website: fabianhee.com</p>
+
+                <p class="modal-footer-note">This is my personal project. If you like it, feel free to contribute! Also, check out my website: fabianhee.com</p>
             </div>
+
         </div>
     </div>
 
