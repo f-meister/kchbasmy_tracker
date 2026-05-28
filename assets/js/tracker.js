@@ -38,6 +38,10 @@ legend.onAdd = function () {
             <span>Bus Stop</span>
         </div>
         <div class="legend-item">
+            <span class="legend-marker-stop" style="background-color: #f97316 !important;"></span>
+            <span>Interchange</span>
+        </div>
+        <div class="legend-item">
             <span class="legend-marker-bus">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1M6 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM16 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
@@ -51,8 +55,9 @@ legend.onAdd = function () {
 
 legend.addTo(map);
 
-// Dynamic lookup index mapping: routeCode -> routeLongName
+// Dynamic lookup indexes
 const routeNamesLookup = {};
+const stopRoutesIndex = {}; // Mapping dictionary: stop_id -> Array of uppercase passing routes
 
 // Initialization bootstrap routine called once global JSON objects load
 function initializeRouteSelector() {
@@ -64,6 +69,23 @@ function initializeRouteSelector() {
                 routeNamesLookup[f.properties.routeCode.toLowerCase()] = f.properties.routeName || "Operational Route";
             }
         });
+
+        // --- CALCULATE REVERSE INTERCHANGE MAP ON INITIALIZATION ---
+        if (routeStopsIndex) {
+            Object.keys(routeStopsIndex).forEach(routeKey => {
+                const upperRoute = routeKey.toUpperCase();
+                const stopIdsArray = routeStopsIndex[routeKey] || [];
+                
+                stopIdsArray.forEach(stopId => {
+                    if (!stopRoutesIndex[stopId]) {
+                        stopRoutesIndex[stopId] = [];
+                    }
+                    if (!stopRoutesIndex[stopId].includes(upperRoute)) {
+                        stopRoutesIndex[stopId].push(upperRoute);
+                    }
+                });
+            });
+        }
 
         const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode).filter(Boolean);
         [...new Set(trackingCodes)].sort().forEach(code => {
@@ -127,14 +149,37 @@ function renderFilteredBusStops(selectedCode) {
     }
 
     L.geoJSON({ type: "FeatureCollection", features: targetFeatures }, {
-        pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
-            radius: 8, weight: 2, fillColor: "#10b981", color: "#ffffff", fillOpacity: 0.9, pane: 'busStopsPane'
-        }).bindPopup(`
-            <div style="font-family: system-ui, sans-serif; padding: 2px; color: #111;">
-                <span style="color: #666; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Bus Stop</span>
-                <strong style="font-size: 13px;">${feature.properties.stopName}</strong>
-            </div>
-        `, { maxWidth: 250 })
+        pointToLayer: (feature, latlng) => {
+            const stopId = feature.properties.stop_id;
+            const passingRoutes = stopRoutesIndex[stopId] || [];
+            
+            // Assign orange marker color if a station serves more than 1 distinct route layout line
+            const isInterchange = passingRoutes.length > 1;
+            const markerColor = isInterchange ? "#f97316" : "#10b981";
+
+            // Generate clean typographic badge tag elements for popups
+            const routeBadgesHtml = passingRoutes.sort().map(r => 
+                `<span class="popup-route-badge">${r}</span>`
+            ).join('');
+
+            return L.circleMarker(latlng, {
+                radius: 8, 
+                weight: 2, 
+                fillColor: markerColor, 
+                color: "#ffffff", 
+                fillOpacity: 0.9, 
+                pane: 'busStopsPane'
+            }).bindPopup(`
+                <div class="stop-popup-content">
+                    <span class="popup-label-type">${isInterchange ? '🔄 Transit Interchange' : 'Bus Stop'}</span>
+                    <strong class="popup-stop-title">${feature.properties.stopName}</strong>
+                    <div class="popup-routes-list-wrapper">
+                        <span class="popup-routes-label">Available Routes:</span>
+                        <div class="popup-badges-grid">${routeBadgesHtml}</div>
+                    </div>
+                </div>
+            `, { maxWidth: 250 });
+        }
     }).addTo(stopLayer);
 }
 
@@ -206,64 +251,64 @@ function syncLiveBusTracker() {
                 ? targetBuses 
                 : targetBuses.filter(b => b.routeCode.toLowerCase() === routeSelection.toLowerCase());
 
-            filtered.forEach(bus => {
-                L.marker([bus.latitude, bus.longitude], { icon: busIcon })
-                 .bindPopup(`
-                    <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
-                        <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Active Vehicle Stream</span>
-                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">Bus Code: ${bus.routeCode.toUpperCase()}</strong>
-                        <strong>Vehicle ID:</strong> ${bus.vehicleNumber}<br/>
-                        <strong>Destination:</strong> ${bus.routeName}<br/>
-                        <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">Source: ${selectedSource.toUpperCase()}</span>
-                    </div>
-                 `, { maxWidth: 250 })
-                 .addTo(busLayer);
-            });
-            document.getElementById('refresh-indicator').textContent = `Last sync (${selectedSource}): ${new Date().toLocaleTimeString()}`;
-        })
-        .catch(() => {
-            document.getElementById('refresh-indicator').textContent = "Sync execution failure";
-        });
-}
+                    filtered.forEach(bus => {
+                        L.marker([bus.latitude, bus.longitude], { icon: busIcon })
+                         .bindPopup(`
+                            <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
+                                <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Active Vehicle Stream</span>
+                                <strong style="font-size: 15px; display: block; margin-bottom: 5px;">Bus Code: ${bus.routeCode.toUpperCase()}</strong>
+                                <strong>Vehicle ID:</strong> ${bus.vehicleNumber}<br/>
+                                <strong>Destination:</strong> ${bus.routeName}<br/>
+                                <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">Source: ${selectedSource.toUpperCase()}</span>
+                            </div>
+                         `, { maxWidth: 250 })
+                         .addTo(busLayer);
+                    });
+                    document.getElementById('refresh-indicator').textContent = `Last sync (${selectedSource}): ${new Date().toLocaleTimeString()}`;
+                })
+                .catch(() => {
+                    document.getElementById('refresh-indicator').textContent = "Sync execution failure";
+                });
+        }
 
-document.getElementById('route-selector').addEventListener('change', (e) => {
-    const code = e.target.value;
-    updateRouteDescriptionLabel(code); 
-    updateTimetableLink(code);
-    renderSelectedRouteLine(code);
-    renderFilteredBusStops(code);
-    syncLiveBusTracker();
-});
-
-const radios = document.querySelectorAll('input[name="feed-source"]');
-if (radios) {
-    radios.forEach(radio => {
-        radio.addEventListener('change', () => {
+        document.getElementById('route-selector').addEventListener('change', (e) => {
+            const code = e.target.value;
+            updateRouteDescriptionLabel(code); 
+            updateTimetableLink(code);
+            renderSelectedRouteLine(code);
+            renderFilteredBusStops(code);
             syncLiveBusTracker();
         });
-    });
-}
 
-// --- RESPONSIVE MODAL CONTROL LOGIC ---
-const infoOverlay = document.getElementById('info-modal-overlay');
-const infoTrigger = document.getElementById('info-modal-trigger');
-const infoClose = document.getElementById('info-modal-close');
+        const radios = document.querySelectorAll('input[name="feed-source"]');
+        if (radios) {
+            radios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    syncLiveBusTracker();
+                });
+            });
+        }
 
-function openInfoModal() {
-    if (infoOverlay) infoOverlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; 
-}
+        // --- RESPONSIVE MODAL CONTROL LOGIC ---
+        const infoOverlay = document.getElementById('info-modal-overlay');
+        const infoTrigger = document.getElementById('info-modal-trigger');
+        const infoClose = document.getElementById('info-modal-close');
 
-function closeInfoModal() {
-    if (infoOverlay) infoOverlay.style.display = 'none';
-    document.body.style.overflow = ''; 
-}
+        function openInfoModal() {
+            if (infoOverlay) infoOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; 
+        }
 
-if (infoTrigger) infoTrigger.addEventListener('click', openInfoModal);
-if (infoClose) infoClose.addEventListener('click', closeInfoModal);
+        function closeInfoModal() {
+            if (infoOverlay) infoOverlay.style.display = 'none';
+            document.body.style.overflow = ''; 
+        }
 
-if (infoOverlay) {
-    infoOverlay.addEventListener('click', (e) => {
-        if (e.target === infoOverlay) closeInfoModal();
-    });
-}
+        if (infoTrigger) infoTrigger.addEventListener('click', openInfoModal);
+        if (infoClose) infoClose.addEventListener('click', closeInfoModal);
+
+        if (infoOverlay) {
+            infoOverlay.addEventListener('click', (e) => {
+                if (e.target === infoOverlay) closeInfoModal();
+            });
+        }
