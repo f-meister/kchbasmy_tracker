@@ -76,15 +76,6 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     });
   });
 
-  it('should dynamically render the route long name next to the dropdown when a route is active', () => {
-    const targetRoute = 'Q12';
-    cy.get('#route-description-text').should('not.be.visible');
-    cy.get('#route-selector').select(targetRoute);
-    cy.get('#route-description-text').should('be.visible').and('not.have.css', 'opacity', '0');
-    cy.get('#route-selector').select('all');
-    cy.get('#route-description-text').should('not.be.visible');
-  });
-
   it('should dynamically reveal the correct timetable link when an explicit route is selected', () => {
     const targetRoute = 'Q12';
     cy.get('#timetable-link-container').should('not.be.visible');
@@ -143,6 +134,32 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('have.css', 'background-color', 'rgb(37, 99, 235)')
       .and('have.css', 'width', '15px')
       .and('have.css', 'height', '15px');
+  });
+
+  // --- UPDATED UX FEATURE: INLINE ROUTE LONG NAME VERIFICATION ---
+  it('should immediately render the onboarding guide prompt on load, then swap to the long name when a route is active', () => {
+    const targetRoute = 'Q12';
+
+    // 1. Verify the crisp chevron onboarding prompt is visible instantly on boot
+    cy.get('#route-description-text')
+      .should('be.visible')
+      .and('have.class', 'route-prompt-text')
+      .and('contain.text', '◄ Choose the bus route you want to track');
+
+    // 2. Select an active route code from the selector
+    cy.get('#route-selector').select(targetRoute);
+
+    // 3. Confirm onboarding drops off and displays route details
+    cy.get('#route-description-text')
+      .should('be.visible')
+      .and('not.have.class', 'route-prompt-text')
+      .and('not.contain.text', '◄ Choose the bus route you want to track');
+
+    // 4. Changing selection back to "all" should gracefully bring back the chevron prompt
+    cy.get('#route-selector').select('all');
+    cy.get('#route-description-text', { timeout: 10000 })
+      .should('be.visible')
+      .and('have.class', 'route-prompt-text');
   });
 
 });

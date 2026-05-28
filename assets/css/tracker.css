@@ -506,3 +506,12 @@ h1 {
     border: 2px solid #ffffff;
     transition: transform 0.2s ease-in-out;
 }
+
+/* --- INLINE ROUTE ONBOARDING PROMPT --- */
+#route-description-text.route-prompt-text {
+    color: #94a3b8 !important; /* Non-intrusive slate gray tint */
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    user-select: none;
+}
