@@ -454,3 +454,55 @@ h1 {
 .main-terminal-pulse {
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
+
+/* --- BUS ICON SVG USE INSTANCE DIMENSION MATRICES --- */
+.brand-icon {
+    width: 20px;
+    height: 20px;
+    color: white;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.legend-svg-use {
+    width: 10px;
+    height: 10px;
+    display: block;
+}
+
+.map-svg-use {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* --- UNIFORM BRANDING BUS ELEMENT LAYOUTS --- */
+.legend-bus-icon-preview {
+    background-color: #2563eb;
+    color: #ffffff;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border: 1.4px solid #ffffff;
+    margin-left:-1px; /* Slight negative margin to visually center the smaller bus icon within the legend item */
+    margin-right: -2px; /* Negative margin to visually center the smaller bus icon within the legend item */
+}
+
+.map-active-bus-marker {
+    background-color: #2563eb; 
+    color: #ffffff; 
+    width: 34px; 
+    height: 34px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3); 
+    border: 2px solid #ffffff;
+    transition: transform 0.2s ease-in-out;
+}
