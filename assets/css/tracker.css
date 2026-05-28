@@ -436,3 +436,21 @@ h1 {
     font-family: monospace;
     display: inline-block;
 }
+
+/* --- MAIN HUB TERMINAL STATION CUSTOM POPUPS --- */
+.popup-label-terminal {
+    color: #2563eb !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em;
+}
+
+.popup-title-terminal {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #0f172a;
+}
+
+/* Optional: Subtle drop-shadow pop effect to help larger terminal nodes pop cleanly on high-zoom tile layers */
+.main-terminal-pulse {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}

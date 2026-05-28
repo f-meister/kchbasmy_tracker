@@ -28,36 +28,40 @@ const stopLayer = L.layerGroup().addTo(map);
 const legend = L.control({ position: 'topright' });
 
 legend.onAdd = function () {
-    const div = L.DomUtil.create('div', 'map-legend');
-    div.innerHTML = `
-        <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic;">
-        Tap icons for info!
-        </div>
-        <div class="legend-item">
-            <span class="legend-marker-stop"></span>
-            <span>Bus Stop</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-marker-stop" style="background-color: #f97316 !important;"></span>
-            <span>Interchange</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-marker-bus">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1M6 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM16 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
-                </svg>
-            </span>
-            <span>Active Bus</span>
-        </div>
-    `;
-    return div;
-};
+            const div = L.DomUtil.create('div', 'map-legend');
+            div.innerHTML = `
+                <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic;">
+                Tap icons for info!
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker-stop"></span>
+                    <span>Bus Stop</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker-stop" style="background-color: #f97316 !important;"></span>
+                    <span>Interchange</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker-stop" style="background-color: #2563eb !important; width: 14px; height: 14px; margin-left: -2px; margin-right: -2px;"></span>
+                    <span>Main Station</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker-bus">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h1M6 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM16 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
+                        </svg>
+                    </span>
+                    <span>Active Bus</span>
+                </div>
+            `;
+            return div;
+        };
 
 legend.addTo(map);
 
 // Dynamic lookup indexes
 const routeNamesLookup = {};
-const stopRoutesIndex = {}; // Mapping dictionary: stop_id -> Array of uppercase passing routes
+const stopRoutesIndex = {}; 
 
 // Initialization bootstrap routine called once global JSON objects load
 function initializeRouteSelector() {
@@ -151,28 +155,46 @@ function renderFilteredBusStops(selectedCode) {
     L.geoJSON({ type: "FeatureCollection", features: targetFeatures }, {
         pointToLayer: (feature, latlng) => {
             const stopId = feature.properties.stop_id;
+            const stopName = feature.properties.stopName || '';
             const passingRoutes = stopRoutesIndex[stopId] || [];
             
-            // Assign orange marker color if a station serves more than 1 distinct route layout line
+            // Intercept anchor hub terminal strings safely from GeoJSON stream fields
+            const lowerStopName = stopName.toLowerCase();
+            const isMainTerminal = lowerStopName.includes("saujana parking") || lowerStopName.includes("open air market");
             const isInterchange = passingRoutes.length > 1;
-            const markerColor = isInterchange ? "#f97316" : "#10b981";
 
-            // Generate clean typographic badge tag elements for popups
+            let markerRadius = 8;
+            let markerColor = "#10b981"; 
+            let popupHeaderType = "Bus Stop";
+            let customMarkerClass = "";
+
+            if (isMainTerminal) {
+                markerRadius = 14;           // ~75% upscale expansion factor
+                markerColor = "#2563eb";    // Brand blue main terminal identifier (matches bus icon!)
+                popupHeaderType = "🚨 INTERCHANGE STATION";
+                customMarkerClass = "main-terminal-pulse"; 
+            } else if (isInterchange) {
+                markerRadius = 8;
+                markerColor = "#f97316";    // Orange lane crossover marker
+                popupHeaderType = "🔄 Transit Interchange";
+            }
+
             const routeBadgesHtml = passingRoutes.sort().map(r => 
                 `<span class="popup-route-badge">${r}</span>`
             ).join('');
 
             return L.circleMarker(latlng, {
-                radius: 8, 
-                weight: 2, 
+                radius: markerRadius, 
+                weight: isMainTerminal ? 3 : 2, 
                 fillColor: markerColor, 
                 color: "#ffffff", 
-                fillOpacity: 0.9, 
+                fillOpacity: 0.95, 
+                className: customMarkerClass,
                 pane: 'busStopsPane'
             }).bindPopup(`
                 <div class="stop-popup-content">
-                    <span class="popup-label-type">${isInterchange ? '🔄 Transit Interchange' : 'Bus Stop'}</span>
-                    <strong class="popup-stop-title">${feature.properties.stopName}</strong>
+                    <span class="popup-label-type ${isMainTerminal ? 'popup-label-terminal' : ''}">${popupHeaderType}</span>
+                    <strong class="popup-stop-title ${isMainTerminal ? 'popup-title-terminal' : ''}">${stopName}</strong>
                     <div class="popup-routes-list-wrapper">
                         <span class="popup-routes-label">Available Routes:</span>
                         <div class="popup-badges-grid">${routeBadgesHtml}</div>
