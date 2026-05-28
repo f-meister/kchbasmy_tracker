@@ -131,6 +131,20 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('body').should('not.have.css', 'overflow', 'hidden');
   });
 
+  it('should visually render the dark map legend context and reflect the 15px active bus indicator', () => {
+    cy.get('.map-legend')
+      .should('be.visible')
+      .and('contain.text', 'Bus Stop')
+      .and('contain.text', 'Active Bus');
+
+    // Confirms your new custom 15px layout boundaries fit cleanly inside Suite 1
+    cy.get('.legend-bus-icon-preview')
+      .should('be.visible')
+      .and('have.css', 'background-color', 'rgb(37, 99, 235)')
+      .and('have.css', 'width', '15px')
+      .and('have.css', 'height', '15px');
+  });
+
 });
 
 // ============================================================================
@@ -198,6 +212,19 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
       .and('contain.text', 'Main Station')
       .and('contain.text', 'Active Bus');
 
+    cy.get('.map-legend .legend-marker-stop')
+      .filter((i, el) => el.style.backgroundColor === 'rgb(37, 99, 235)')
+      .should('have.css', 'width', '14px')
+      .and('have.css', 'height', '14px');
+  });
+
+  it('should append the new hierarchical interchange station data models to the legend text mapping', () => {
+    cy.get('.map-legend')
+      .should('be.visible')
+      .and('contain.text', 'Interchange')
+      .and('contain.text', 'Main Station');
+
+    // Asserts that the upscaled blue station swatch matches your 14px map node size matrix
     cy.get('.map-legend .legend-marker-stop')
       .filter((i, el) => el.style.backgroundColor === 'rgb(37, 99, 235)')
       .should('have.css', 'width', '14px')
