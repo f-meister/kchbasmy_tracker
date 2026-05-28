@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q2NRSC79B6"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-Q2NRSC79B6');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAS.MY KCH Tracker</title>
@@ -270,7 +278,7 @@
     </div>
 
     <script>
-        // --- RUNTIME ENVIRONMENT AUTO-LOCK ---
+        // --- RUNTIME ENVIRONMENT AUTO-LOCK & GA4 FILTER ---
         const appShell = document.getElementById('app-shell');
         const branchName = appShell ? appShell.getAttribute('data-branch') : '';
         
@@ -278,6 +286,10 @@
         if (branchName === 'main') {
             const panel = document.getElementById('feed-control-wrapper');
             if (panel) panel.style.display = 'none';
+        } else {
+            // Explicitly disable Google Analytics when NOT running on production main
+            window['ga-disable-G-Q2NRSC79B6'] = true;
+            console.log("Analytics engine muted for non-production workspace branch:", branchName);
         }
 
         // 1. Core Map Initializations
@@ -298,7 +310,6 @@
         const legend = L.control({ position: 'topright' });
 
         legend.onAdd = function () {
-            // Leaflet helper method to create a secure div context container
             const div = L.DomUtil.create('div', 'map-legend');
             div.innerHTML = `
                 <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic;">
@@ -355,7 +366,6 @@
             [...new Set(trackingCodes)].sort().forEach(code => {
                 const opt = document.createElement('option');
                 opt.value = code;
-                // Keep the option text perfectly clean and short ("Q01")
                 opt.textContent = `${code.toUpperCase()}`;
                 selector.appendChild(opt);
             });
@@ -374,7 +384,6 @@
                 if (descriptiveName) {
                     label.textContent = ` ${descriptiveName}`;
                     label.style.display = 'inline-block';
-                    // Trigger reflow to guarantee CSS opacity transition kicks in cleanly
                     void label.offsetWidth; 
                     label.style.opacity = '1';
                 } else {
@@ -461,7 +470,6 @@
         function syncLiveBusTracker() {
             const routeSelection = document.getElementById('route-selector').value;
             
-            // Safe fallback evaluation
             let selectedSource = 'live';
             if (branchName !== 'main') {
                 const checkedRadio = document.querySelector('input[name="feed-source"]:checked');
@@ -516,14 +524,13 @@
 
         document.getElementById('route-selector').addEventListener('change', (e) => {
             const code = e.target.value;
-            updateRouteDescriptionLabel(code); // Trigger descriptive label update
+            updateRouteDescriptionLabel(code); 
             updateTimetableLink(code);
             renderSelectedRouteLine(code);
             renderFilteredBusStops(code);
             syncLiveBusTracker();
         });
 
-        // Safe attachment to radio listeners
         const radios = document.querySelectorAll('input[name="feed-source"]');
         if (radios) {
             radios.forEach(radio => {
@@ -540,18 +547,17 @@
 
         function openInfoModal() {
             if (infoOverlay) infoOverlay.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Prevents background map panning while open
+            document.body.style.overflow = 'hidden'; 
         }
 
         function closeInfoModal() {
             if (infoOverlay) infoOverlay.style.display = 'none';
-            document.body.style.overflow = ''; // Unlocks viewport scrolling interaction rules
+            document.body.style.overflow = ''; 
         }
 
         if (infoTrigger) infoTrigger.addEventListener('click', openInfoModal);
         if (infoClose) infoClose.addEventListener('click', closeInfoModal);
 
-        // Close instantly if user taps on the darkened blur area behind the modal card
         if (infoOverlay) {
             infoOverlay.addEventListener('click', (e) => {
                 if (e.target === infoOverlay) closeInfoModal();
