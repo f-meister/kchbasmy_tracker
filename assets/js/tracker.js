@@ -229,12 +229,30 @@ function renderFilteredBusStops(selectedCode) {
     }).addTo(stopLayer);
 }
 
-// --- UPGRADED MULTI-DIRECTIONAL SHAPE ROUTING PATHS ENGINE ---
+// Global memory store cache layer to protect the public OSRM API from rate-limiting
+const routingCache = {};
+
+// --- OPTIMIZED MULTI-DIRECTIONAL SHAPE ROUTING PATHS ENGINE WITH CACHING ---
 function renderSelectedRouteLine(code) {
     pathLayer.clearLayers();
     if (code === 'all' || !routesPathsData) return;
 
-    const features = routesPathsData.features.filter(f => f.properties.routeCode.toLowerCase() === code.toLowerCase());
+    const lowerCode = code.toLowerCase();
+
+    // 1. PERFORMANCE CHECK: If we already hit this route before, pull it instantly from cache!
+    if (routingCache[lowerCode]) {
+        routingCache[lowerCode].forEach(polyline => polyline.addTo(pathLayer));
+        
+        // Calculate the unified bounding box layout safely from cache
+        const combinedBounds = L.latLngBounds();
+        routingCache[lowerCode].forEach(polyline => combinedBounds.extend(polyline.getBounds()));
+        if (combinedBounds.isValid()) {
+            map.fitBounds(combinedBounds, { padding: [40, 40] });
+        }
+        return; // Halt right here—zero network request fired!
+    }
+
+    const features = routesPathsData.features.filter(f => f.properties.routeCode.toLowerCase() === lowerCode);
     if (features.length === 0) return;
 
     // Loop through ALL matching direction layers (Inbound and Outbound) simultaneously
@@ -255,12 +273,16 @@ function renderSelectedRouteLine(code) {
                 }
             })
             .catch(() => {
+                // Graceful fallback to raw straight GeoJSON coords if OSRM errors out
                 return L.geoJSON(feature, { style: { color: '#2563eb', weight: 4, opacity: 0.8 } });
             });
     });
 
-    // Wait until all threads resolve, mount them cleanly, and scale view bounding boxes
+    // Wait until all direction threads resolve, write to cache, and paint layout
     Promise.all(routingPromises).then(polylines => {
+        // Save the generated Leaflet layer groups to our permanent cache map tracking dictionary
+        routingCache[lowerCode] = polylines;
+
         const combinedBounds = L.latLngBounds();
         polylines.forEach(polyline => {
             polyline.addTo(pathLayer);
