@@ -107,7 +107,7 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
     if (selectedRoute === 'all') {
         if (isInitialBoot) {
             label.classList.add('route-prompt-text');
-            label.innerHTML = `&#8249; Choose your route`;
+            label.innerHTML = `◄ Choose the bus route you want to track`;
             label.style.display = 'inline-block';
             label.style.opacity = '1';
             return;
@@ -118,7 +118,7 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
         setTimeout(() => {
             if (document.getElementById('route-selector').value === 'all') {
                 label.classList.add('route-prompt-text');
-                label.innerHTML = `&#8249; Choose your route`;
+                label.innerHTML = `◄ Choose the bus route you want to track`;
                 label.style.display = 'inline-block';
                 void label.offsetWidth; // Trigger reflow
                 label.style.opacity = '1';
