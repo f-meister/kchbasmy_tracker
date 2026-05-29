@@ -36,7 +36,20 @@ function bootstrapTrackerWorkspace() {
     headers: { 'access-control-allow-origin': '*' }
   }).as('getLiveBuses');
 
-  // 2. Visit the absolute baseline origin of the local preview server
+  // 2. Intercept public OSRM router engine to stabilize execution environment and test cache mechanics
+  cy.intercept('GET', 'https://router.project-osrm.org/route/v1/driving/*', {
+    statusCode: 200,
+    body: {
+      routes: [{
+        geometry: {
+          type: "LineString",
+          coordinates: [[110.342303, 1.557881], [110.338447, 1.554839]]
+        }
+      }]
+    }
+  }).as('getOsrmRoute');
+
+  // 3. Visit the absolute baseline origin of the local preview server
   cy.visit('/');
 }
 
@@ -79,20 +92,41 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     });
   });
 
-  it('should dynamically reveal the correct timetable link when an explicit route is selected', () => {
+  it('should dynamically render multi-directional route lines and protect endpoints using the routing cache', () => {
     const targetRoute = 'Q12';
     cy.get('#timetable-link-container').should('not.be.visible');
+
+    // --- 1. FIRST SELECTION (CACHE MISS) ---
     cy.get('#route-selector').select(targetRoute);
 
+    // Verify the initial outbound OSRM network request was dispatched successfully
+    cy.wait('@getOsrmRoute');
+
+    // Verify timetable components update cleanly
     cy.get('#timetable-link-container').should('be.visible').and('not.have.css', 'display', 'none');
     cy.get('#route-timetable-link')
       .should('have.attr', 'target', '_blank')
       .and('have.attr', 'rel', 'noopener noreferrer')
       .and('have.attr', 'href').and('not.eq', '#');
-
     cy.get('#timetable-link-text').should('have.text', `Click here for ${targetRoute} Transit Map`);
+
+    // Verify that the brand blue polyline layers are drawn on the map canvas
+    cy.get('path.leaflet-interactive')
+      .should('exist')
+      .and('have.attr', 'stroke', '#2563eb');
+
+    // --- 2. RESET STATE ---
     cy.get('#route-selector').select('all');
     cy.get('#timetable-link-container').should('not.be.visible');
+
+    // --- 3. SECOND SELECTION (CACHE HIT) ---
+    cy.get('#route-selector').select(targetRoute);
+
+    // Confirm that the routingCache catches the request and prevents a second API transaction
+    cy.get('@getOsrmRoute.all').should('have.length', 1);
+
+    // Confirm graphics still draw instantly from local memory cache arrays
+    cy.get('path.leaflet-interactive').should('exist');
   });
 
   it('should manage the responsive info modal lifecycle and assert on automated copyright years', () => {
