@@ -396,3 +396,18 @@ if (infoOverlay) {
         if (e.target === infoOverlay) closeInfoModal();
     });
 }
+
+// ============================================================================
+// SYSTEM BOOTSTRAP INITIALIZATION LAYER
+// ============================================================================
+// Executes natively the exact moment the document context mounts completely
+injectDynamicCopyrightYear();
+initializeRouteSelector();
+renderFilteredBusStops('all');
+updateRouteDescriptionLabel('all', true);
+
+// Run the live telemetry fetch instantly now that all indices are bound
+syncLiveBusTracker();
+
+// Pin your background interval synchronization layer safely
+setInterval(syncLiveBusTracker, 60000);
