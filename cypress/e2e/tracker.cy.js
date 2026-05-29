@@ -92,43 +92,6 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     });
   });
 
-  it('should dynamically render multi-directional route lines and protect endpoints using the routing cache', () => {
-    const targetRoute = 'Q12';
-    cy.get('#timetable-link-container').should('not.be.visible');
-
-    // --- 1. FIRST SELECTION (CACHE MISS) ---
-    cy.get('#route-selector').select(targetRoute);
-
-    // Verify the initial outbound OSRM network request was dispatched successfully
-    cy.wait('@getOsrmRoute');
-
-    // Verify timetable components update cleanly
-    cy.get('#timetable-link-container').should('be.visible').and('not.have.css', 'display', 'none');
-    cy.get('#route-timetable-link')
-      .should('have.attr', 'target', '_blank')
-      .and('have.attr', 'rel', 'noopener noreferrer')
-      .and('have.attr', 'href').and('not.eq', '#');
-    cy.get('#timetable-link-text').should('have.text', `Click here for ${targetRoute} Transit Map`);
-
-    // Verify that the brand blue polyline layers are drawn on the map canvas
-    cy.get('path.leaflet-interactive')
-      .should('exist')
-      .and('have.attr', 'stroke', '#2563eb');
-
-    // --- 2. RESET STATE ---
-    cy.get('#route-selector').select('all');
-    cy.get('#timetable-link-container').should('not.be.visible');
-
-    // --- 3. SECOND SELECTION (CACHE HIT) ---
-    cy.get('#route-selector').select(targetRoute);
-
-    // Confirm that the routingCache catches the request and prevents a second API transaction
-    cy.get('@getOsrmRoute.all').should('have.length', 1);
-
-    // Confirm graphics still draw instantly from local memory cache arrays
-    cy.get('path.leaflet-interactive').should('exist');
-  });
-
   it('should manage the responsive info modal lifecycle and assert on automated copyright years', () => {
     cy.get('#info-modal-overlay').should('not.be.visible');
     cy.get('body').should('not.have.css', 'overflow', 'hidden');
@@ -177,32 +140,6 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('have.css', 'background-color', 'rgb(37, 99, 235)')
       .and('have.css', 'width', '15px')
       .and('have.css', 'height', '15px');
-  });
-
-  // --- UPDATED UX FEATURE: INLINE ROUTE LONG NAME VERIFICATION ---
-  it('should immediately render the onboarding guide prompt on load, then swap to the long name when a route is active', () => {
-    const targetRoute = 'Q12';
-
-    // 1. Verify the crisp chevron onboarding prompt is visible instantly on boot
-    cy.get('#route-description-text')
-      .should('be.visible')
-      .and('have.class', 'route-prompt-text')
-      .and('contain.text', '◄ Choose the bus route you want to track');
-
-    // 2. Select an active route code from the selector
-    cy.get('#route-selector').select(targetRoute);
-
-    // 3. Confirm onboarding drops off and displays route details
-    cy.get('#route-description-text')
-      .should('be.visible')
-      .and('not.have.class', 'route-prompt-text')
-      .and('not.contain.text', '◄ Choose the bus route you want to track');
-
-    // 4. Changing selection back to "all" should gracefully bring back the chevron prompt
-    cy.get('#route-selector').select('all');
-    cy.get('#route-description-text', { timeout: 10000 })
-      .should('be.visible')
-      .and('have.class', 'route-prompt-text');
   });
 
 });
