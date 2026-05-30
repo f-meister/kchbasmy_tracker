@@ -82,8 +82,10 @@ async function processFeedEntities(entities, originUrl) {
       longitude: vNode.position.longitude,
       bearing: vNode.position.bearing || 0,
       tripId: liveTripId,
-      // Map back to our fallback tokens cleanly to prevent client-side filter drops
-      routeCode: staticMeta.routeCode || 'BUS',
+      // FIX 1: Safely pass the primitive timestamp string/integer to the frontend
+      timestamp: vNode.timestamp || null,
+      // FIX 2: Default unmapped rows to lowercase 'bus' to match standard string formatting rules cleanly
+      routeCode: staticMeta.routeCode || 'bus',
       shapeId: staticMeta.shapeId || null,
       routeName: staticMeta.routeName || 'In-Service Live Vector'
     };
@@ -93,7 +95,6 @@ async function processFeedEntities(entities, originUrl) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      // cache-control tells both the client browser AND the cloudflare cache intercept layer to lock data for 30s
       "Cache-Control": "public, max-age=30" 
     }
   });
