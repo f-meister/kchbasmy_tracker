@@ -7,7 +7,6 @@ export async function onRequest(context) {
   const API_URL = "https://api.data.gov.my/gtfs-realtime/vehicle-position/mybas-kuching";
 
   // --- EDGE CACHE INTERCEPT LAYER ---
-  // We check Cloudflare's default global cache memory first (skip for active simulation testing)
   const cache = caches.default;
   if (!useMock) {
     const cachedResponse = await cache.match(context.request);
@@ -35,7 +34,6 @@ export async function onRequest(context) {
       const freshResponse = await processFeedEntities(feed.entity, url.origin);
       
       // Store the successful response into Cloudflare's CDN cache memory block before returning it
-      // Cloudflare reads the max-age header automatically to set the expiration window
       context.waitUntil(cache.put(context.request, freshResponse.clone()));
       
       return freshResponse;
@@ -55,29 +53,48 @@ async function processFeedEntities(entities, originUrl) {
   const tripLookup = lookupResponse.ok ? await lookupResponse.json() : {};
 
   const cleanBuses = entities.map(entity => {
-    if (!entity.vehicle) return null;
+    const vNode = entity.vehicle || entity;
+    if (!vNode || !vNode.position) return null;
 
-    const liveTripId = entity.vehicle.trip ? entity.vehicle.trip.tripId : null;
-    const staticMeta = tripLookup[liveTripId] || {};
+    const liveTripId = vNode.trip ? vNode.trip.tripId : null;
+    let staticMeta = {};
+
+    if (liveTripId) {
+      // 1. First Pass: Check for exact match safety fallback
+      if (tripLookup[liveTripId]) {
+        staticMeta = tripLookup[liveTripId];
+      } else {
+        // 2. Dynamic Prefix Matching Fix: Extract schedule block index (e.g. "206" from "206_1_WD_12")
+        const prefix = liveTripId.split('_')[0];
+        
+        // Locate any key in trip_lookup that shares this exact numeric routing block sequence
+        const matchingKey = Object.keys(tripLookup).find(k => k.startsWith(`${prefix}_`));
+        if (matchingKey) {
+          staticMeta = tripLookup[matchingKey];
+        }
+      }
+    }
 
     return {
       id: entity.id,
-      vehicleNumber: entity.vehicle.vehicle?.id || 'Unknown',
-      latitude: entity.vehicle.position.latitude,
-      longitude: entity.vehicle.position.longitude,
-      bearing: entity.vehicle.position.bearing || 0,
+      vehicleNumber: vNode.vehicle?.id || vNode.vehicle?.label || 'Unknown',
+      latitude: vNode.position.latitude,
+      longitude: vNode.position.longitude,
+      bearing: vNode.position.bearing || 0,
       tripId: liveTripId,
-      routeCode: staticMeta.routeCode || 'bas.my',
+      // FIX 1: Safely pass the primitive timestamp string/integer to the frontend
+      timestamp: vNode.timestamp || null,
+      // FIX 2: Default unmapped rows to lowercase 'bus' to match standard string formatting rules cleanly
+      routeCode: staticMeta.routeCode || 'bus',
       shapeId: staticMeta.shapeId || null,
-      routeName: staticMeta.routeName || 'In Service'
+      routeName: staticMeta.routeName || 'In-Service Live Vector'
     };
-  }).filter(bus => bus !== null && bus.latitude !== null);
+  }).filter(bus => bus !== null && bus.latitude !== null && bus.latitude !== 0);
 
   return new Response(JSON.stringify(cleanBuses), {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      // cache-control tells both the client browser AND the cloudflare cache intercept layer to lock data for 30s
       "Cache-Control": "public, max-age=30" 
     }
   });

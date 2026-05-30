@@ -333,6 +333,28 @@ function syncLiveBusTracker() {
             const filtered = routeSelection === 'all' 
                 ? targetBuses 
                 : targetBuses.filter(b => b.routeCode.toLowerCase() === routeSelection.toLowerCase());
+            
+            // --- SIMPLE TIMESTAMP DECIPHER LOG ---
+            if (branchName !== 'main') {
+                try {
+                    console.clear(); // Wipe away background clutter logs
+                    console.log("=== BAS.MY LIVE APERIODIC LOG PASS ===");
+                    console.log("Total array items returned from backend:", buses ? buses.length : 0);
+                    
+                    if (Array.isArray(buses) && buses.length > 0) {
+                        const firstBus = buses[0];
+                        console.log("Sample Bus Node 0 Schema Payload Structure:", {
+                            id: firstBus.id,
+                            code: firstBus.routeCode,
+                            name: firstBus.routeName,
+                            time: firstBus.timestamp // Verifying if your backend proxy passes this field
+                        });
+                    }
+                } catch (logErr) {
+                    console.warn("Diagnostics log printout interrupted:", logErr);
+                }
+            }
+            // -------------------------------------
 
             filtered.forEach(bus => {
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
