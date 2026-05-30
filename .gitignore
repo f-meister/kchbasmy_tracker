@@ -175,3 +175,7 @@ Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
+
+# Local testing files
+dump-proto.js
+raw-feed-dump.json
