@@ -139,11 +139,15 @@
         {{ $paths := resources.Get "data/routes_paths.json" }}
         {{ $stops := resources.Get "data/stops_locations.json" }}
         {{ $index := resources.Get "data/route_stops_index.json" }}
+        {{ $destinations := resources.Get "data/destinations.json" }}
 
         // 2. Bind them to absolute JavaScript global windows for tracker.js to ingest
         window.routesPathsData = {{ if $paths }} {{ $paths.Content | safeJS }} {{ else }} null {{ end }};
         window.stopsData = {{ if $stops }} {{ $stops.Content | safeJS }} {{ else }} null {{ end }};
         window.routeStopsIndex = {{ if $index }} {{ $index.Content | safeJS }} {{ else }} {} {{ end }};
+
+        // EXPOSE THE DYNAMIC GTFS TERMINAL MAP:
+        window.destinationLookup = {{ if $destinations }} {{ $destinations.Content | safeJS }} {{ else }} {} {{ end }};
 
         // 3. Map native YAML values straight to window global memory namespaces
         window.timetableMap = {};

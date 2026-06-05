@@ -197,15 +197,27 @@ function renderFilteredBusStops(selectedCode) {
         });
     }
 
+    // --- DYNAMICALLY EXTRACT ALL VERIFIED TERMINUS ENDPOINTS ---
+    const terminalNames = new Set();
+    if (window.destinationLookup) {
+        Object.values(window.destinationLookup).forEach(directions => {
+            Object.values(directions).forEach(name => {
+                if (name) terminalNames.add(name.toLowerCase().trim());
+            });
+        });
+    }
+
     L.geoJSON({ type: "FeatureCollection", features: targetFeatures }, {
         pointToLayer: (feature, latlng) => {
             const stopId = feature.properties.stop_id;
             const stopName = feature.properties.stopName || '';
             const passingRoutes = stopRoutesIndex[stopId] || [];
             
-            // Intercept anchor hub terminal strings safely from GeoJSON stream fields
-            const lowerStopName = stopName.toLowerCase();
-            const isMainTerminal = lowerStopName.includes("saujana parking") || lowerStopName.includes("open air market");
+            // Clean up the stop name string for an exact match against our terminal set
+            const lowerStopName = stopName.toLowerCase().trim();
+            
+            // ✅ DYNAMIC HUB EVALUATION: Checks if the stop is a terminal station for any active line
+            const isMainTerminal = terminalNames.has(lowerStopName);
             const isInterchange = passingRoutes.length > 1;
 
             let markerRadius = 8;
@@ -384,13 +396,28 @@ function syncLiveBusTracker() {
             // -----------------------------------------
 
             filtered.forEach(bus => {
+                // 1. Isolate the active direction code string signature
+                // Uses explicit telemetry property or extracts from tripId string fallback (e.g., "210_1_WD_13" -> "1")
+                const dirId = bus.directionId !== undefined 
+                    ? String(bus.directionId) 
+                    : (bus.tripId ? bus.tripId.split('_')[1] : '0');
+                
+                const routeKey = bus.routeCode ? bus.routeCode.toLowerCase() : '';
+                
+                // 2. Query our dynamic build-time destination lookup index with global safety fallback
+                let finalDestination = bus.routeName;
+                if (typeof destinationLookup !== 'undefined' && destinationLookup[routeKey] && destinationLookup[routeKey][dirId]) {
+                    finalDestination = destinationLookup[routeKey][dirId];
+                }
+
+                // 3. Paint the marker popup configuration
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
                  .bindPopup(`
                     <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
                         <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">${txtPopStream}</span>
                         <strong style="font-size: 15px; display: block; margin-bottom: 5px;">${txtPopCode} ${bus.routeCode.toUpperCase()}</strong>
                         <strong>${txtPopVehicle}</strong> ${bus.vehicleNumber}<br/>
-                        <strong>${txtPopDestination}</strong> ${bus.routeName}<br/>
+                        <strong>${txtPopDestination}</strong> ${finalDestination}<br/>
                         <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">${txtPopSource} ${selectedSource.toUpperCase()}</span>
                     </div>
                  `, { maxWidth: 250 })
