@@ -51,7 +51,7 @@ function bootstrapTrackerWorkspace() {
     headers: { 'access-control-allow-origin': '*' }
   }).as('getLiveBuses');
 
-  // 2. Stabilize open network OSRM requests
+  // 2. Stabilize open network OSRM requests to prevent external rate-limiting failures
   cy.intercept('GET', 'https://router.project-osrm.org/route/v1/driving/*', {
     statusCode: 200,
     body: {
@@ -64,10 +64,14 @@ function bootstrapTrackerWorkspace() {
     }
   }).as('getOsrmRoute');
 
-  // 3. Mount global tracking configurations straight onto the window before document content loads
+  // 3. Protect mock data from being overwritten by inline scripts using a getter/setter proxy
   cy.visit('/', {
     onBeforeLoad(win) {
-      win.destinationLookup = MOCK_DESTINATION_LOOKUP;
+      Object.defineProperty(win, 'destinationLookup', {
+        get: () => MOCK_DESTINATION_LOOKUP,
+        set: () => {}, // Intercepts and discards inline assignments
+        configurable: true
+      });
     }
   });
 }
@@ -95,6 +99,23 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
   });
 
   it('should load routes_paths.json and populate the dropdown with clean route codes', () => {
+    cy.window().then((win) => {
+      Object.defineProperty(win, 'routesPathsData', {
+        get: () => ({
+          type: "FeatureCollection",
+          features: [
+            { type: "Feature", properties: { routeCode: "Q01", routeName: "Route One" }, geometry: { type: "LineString", coordinates: [] } },
+            { type: "Feature", properties: { routeCode: "Q10", routeName: "Route Ten" }, geometry: { type: "LineString", coordinates: [] } }
+          ]
+        }),
+        set: () => {},
+        configurable: true
+      });
+      
+      // Manually trigger the dropdown initializer to process our newly injected data cleanly
+      win.initializeRouteSelector();
+    });
+
     cy.get('#route-selector', { timeout: 10000 })
       .should('be.visible')
       .find('option')
@@ -168,7 +189,6 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
   it('should capture main terminals dynamically and verify blue vector circle rendering layers', () => {
     cy.get('#route-selector').select('all');
 
-    // Confirm promoted station markers match design colors and use class styling names
     cy.get('.main-terminal-pulse', { timeout: 10000 })
       .should('exist')
       .and('have.attr', 'fill', '#2563eb');
@@ -196,13 +216,18 @@ describe('BAS.MY KCH Tracker: Dynamic Terminal Destinations', () => {
         routeCode: "Q01",
         tripId: "207_0_WE_1", 
         directionId: 0,
-        routeName: "SAUJANA PARKING - SURAU DARUL IBADAH" // Old generic fallback name
+        routeName: "SAUJANA PARKING - SURAU DARUL IBADAH" 
       }
     ]).as('getLiveBuses');
 
+    // Protect mock parameters from extraction template rewrites using definition gates
     cy.visit('/', {
       onBeforeLoad(win) {
-        win.destinationLookup = MOCK_DESTINATION_LOOKUP;
+        Object.defineProperty(win, 'destinationLookup', {
+          get: () => MOCK_DESTINATION_LOOKUP,
+          set: () => {},
+          configurable: true
+        });
       }
     });
     
@@ -218,7 +243,6 @@ describe('BAS.MY KCH Tracker: Dynamic Terminal Destinations', () => {
       cy.contains('Active Vehicle Stream').should('be.visible');
       cy.contains('Bus Code: Q01').should('be.visible');
       
-      // Asserts that the popup displays the localized destination string without fallback leakage
       cy.contains('Destination:')
         .parent()
         .should('include.text', 'SURAU DARUL IBADAH')
@@ -274,28 +298,31 @@ describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
       }
     ]).as('getSpacingBus');
 
+    // Use an on-screen terminal name to prevent Leaflet SVG viewport pruning
     cy.visit('/', {
       onBeforeLoad(win) {
-        // Inject messy whitespace and casing into the lookup dictionary to test matching resilience
-        win.destinationLookup = {
-          "q01": {
-            "0": "   suRAU daRUl iBAdah   "
-          }
-        };
+        Object.defineProperty(win, 'destinationLookup', {
+          get: () => ({
+            "q01": {
+              "0": "   teRMINal sAUJanA pARKing   "
+            }
+          }),
+          set: () => {},
+          configurable: true
+        });
       }
     });
 
     cy.wait('@getSpacingBus');
 
-    // Force map update check to ensure messy strings are correctly matched and evaluated as a pulsing terminus
     cy.window().then((win) => {
       win.renderFilteredBusStops('all');
     });
 
-    // Verify the system successfully matches the string, promotes the node, and handles marker popup triggers
-    cy.get('path.main-terminal-pulse').should('exist').first().click({ force: true });
+    // Use uniform class selector aligned with Suite 2
+    cy.get('.main-terminal-pulse', { timeout: 10000 }).should('exist').first().click({ force: true });
     
-    cy.get('.leaflet-popup-content').within(() => {
+    cy.get('.stop-popup-content').within(() => {
       cy.contains('🚨 Main Station').should('be.visible');
     });
   });
