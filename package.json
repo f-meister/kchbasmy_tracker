@@ -22,8 +22,8 @@
     "axios": "^1.16.1"
   },
   "devDependencies": {
-    "cypress": "^15.15.0",
+    "cypress": "^15.16.0",
     "gtfs-realtime-bindings": "^2.0.0",
-    "wrangler": "^4.94.0"
+    "wrangler": "^4.98.0"
   }
 }
