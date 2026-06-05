@@ -1,6 +1,24 @@
-// --- RUNTIME ENVIRONMENT AUTO-LOCK & GA4 FILTER ---
+// --- RUNTIME ENVIRONMENT CONFIGURATION & L10N STRINGS ---
 const appShell = document.getElementById('app-shell');
 const branchName = appShell ? appShell.getAttribute('data-branch') : '';
+
+// Pull the Hugo-compiled strings dynamically from the DOM dataset wrapper attributes
+const txtSyncing        = appShell?.dataset.txtSyncing        || 'Syncing positions...';
+const txtFailed         = appShell?.dataset.txtFailed         || 'Sync execution failure';
+const txtLatest         = appShell?.dataset.txtLatest         || 'Last sync';
+const txtPrompt         = appShell?.dataset.txtPrompt         || '◄ Choose the bus route you want to track';
+const txtTimetable      = appShell?.dataset.txtTimetable      || 'Click here for %ROUTE% Transit Map';
+const txtLgPrompt       = appShell?.dataset.txtLgPrompt       || 'Tap icons for info!';
+const txtLgStop         = appShell?.dataset.txtLgStop         || 'Bus Stop';
+const txtLgInterchange  = appShell?.dataset.txtLgInterchange  || 'Interchange';
+const txtLgStation      = appShell?.dataset.txtLgStation      || 'Main Station';
+const txtLgBus          = appShell?.dataset.txtLgBus          || 'Active Bus';
+const txtPopRoutes      = appShell?.dataset.txtPopRoutes      || 'Available Routes';
+const txtPopStream      = appShell?.dataset.txtPopStream      || 'Active Vehicle Stream';
+const txtPopCode        = appShell?.dataset.txtPopCode        || 'Bus Code:';
+const txtPopVehicle     = appShell?.dataset.txtPopVehicle     || 'Vehicle ID:';
+const txtPopDestination = appShell?.dataset.txtPopDestination || 'Destination:';
+const txtPopSource      = appShell?.dataset.txtPopSource      || 'Source:';
 
 if (branchName === 'main') {
     const panel = document.getElementById('feed-control-wrapper');
@@ -31,25 +49,25 @@ legend.onAdd = function () {
     const div = L.DomUtil.create('div', 'map-legend');
     div.innerHTML = `
         <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic;">
-        Tap icons for info!
+        ${txtLgPrompt}
         </div>
         <div class="legend-item">
             <span class="legend-marker-stop"></span>
-            <span>Bus Stop</span>
+            <span>${txtLgStop}</span>
         </div>
         <div class="legend-item">
             <span class="legend-marker-stop" style="background-color: #f97316 !important;"></span>
-            <span>Interchange</span>
+            <span>${txtLgInterchange}</span>
         </div>
         <div class="legend-item">
             <span class="legend-marker-stop" style="background-color: #2563eb !important; width: 14px; height: 14px; margin-left: -2px; margin-right: -2px;"></span>
-            <span>Main Station</span>
+            <span>${txtLgStation}</span>
         </div>
         <div class="legend-item">
             <div class="legend-bus-icon-preview">
                 <svg class="legend-svg-use"><use href="#icon-bus"></use></svg>
             </div>
-            <span>Active Bus</span>
+            <span>${txtLgBus}</span>
         </div>
     `;
     return div;
@@ -107,7 +125,7 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
     if (selectedRoute === 'all') {
         if (isInitialBoot) {
             label.classList.add('route-prompt-text');
-            label.innerHTML = `◄ Choose the bus route you want to track`;
+            label.innerHTML = txtPrompt; // ◄ Bound to strings.yaml configuration
             label.style.display = 'inline-block';
             label.style.opacity = '1';
             return;
@@ -118,7 +136,7 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
         setTimeout(() => {
             if (document.getElementById('route-selector').value === 'all') {
                 label.classList.add('route-prompt-text');
-                label.innerHTML = `◄ Choose the bus route you want to track`;
+                label.innerHTML = txtPrompt; // ◄ Bound to strings.yaml configuration
                 label.style.display = 'inline-block';
                 void label.offsetWidth; // Trigger reflow
                 label.style.opacity = '1';
@@ -153,7 +171,10 @@ function updateTimetableLink(selectedRoute) {
         container.style.display = 'none';
     } else {
         anchor.href = activeLink;
-        linkText.textContent = `Click here for ${selectedRoute.toUpperCase()} Transit Map`;
+        
+        // Dynamic Replacement: Swaps the placeholder token with the active route code uppercase string
+        linkText.textContent = txtTimetable.replace('%ROUTE%', selectedRoute.toUpperCase());
+        
         container.style.display = 'inline-flex';
     }
 }
@@ -189,18 +210,18 @@ function renderFilteredBusStops(selectedCode) {
 
             let markerRadius = 8;
             let markerColor = "#10b981"; 
-            let popupHeaderType = "Bus Stop";
+            let popupHeaderType = txtLgStop; // Default to "Bus Stop" label, dynamically pulled from strings.yaml configuration
             let customMarkerClass = "";
 
             if (isMainTerminal) {
                 markerRadius = 14;           // ~75% upscale expansion factor
                 markerColor = "#2563eb";    // Brand blue main terminal identifier (matches bus icon!)
-                popupHeaderType = "🚨 INTERCHANGE STATION";
+                popupHeaderType = "🚨 " + txtLgStation;
                 customMarkerClass = "main-terminal-pulse"; 
             } else if (isInterchange) {
                 markerRadius = 8;
                 markerColor = "#f97316";    // Orange lane crossover marker
-                popupHeaderType = "🔄 Transit Interchange";
+                popupHeaderType = "🔄 " + txtLgInterchange;
             }
 
             const routeBadgesHtml = passingRoutes.sort().map(r => 
@@ -220,7 +241,7 @@ function renderFilteredBusStops(selectedCode) {
                     <span class="popup-label-type ${isMainTerminal ? 'popup-label-terminal' : ''}">${popupHeaderType}</span>
                     <strong class="popup-stop-title ${isMainTerminal ? 'popup-title-terminal' : ''}">${stopName}</strong>
                     <div class="popup-routes-list-wrapper">
-                        <span class="popup-routes-label">Available Routes:</span>
+                        <span class="popup-routes-label">${txtPopRoutes}</span>
                         <div class="popup-badges-grid">${routeBadgesHtml}</div>
                     </div>
                 </div>
@@ -310,7 +331,7 @@ function syncLiveBusTracker() {
         if (checkedRadio) selectedSource = checkedRadio.value;
     }
     
-    document.getElementById('refresh-indicator').textContent = "Syncing positions...";
+    document.getElementById('refresh-indicator').textContent = txtSyncing; // ◄ Applied config string variable
     const apiEndpoint = selectedSource === 'mock' ? '/api/buses?mock=true' : '/api/buses';
 
     const busIcon = L.divIcon({
@@ -330,49 +351,55 @@ function syncLiveBusTracker() {
         .then(buses => {
             busLayer.clearLayers();
             const targetBuses = Array.isArray(buses) ? buses : [];
+            
             const filtered = routeSelection === 'all' 
                 ? targetBuses 
-                : targetBuses.filter(b => b.routeCode.toLowerCase() === routeSelection.toLowerCase());
+                : targetBuses.filter(b => b.routeCode && b.routeCode.toLowerCase() === routeSelection.toLowerCase());
             
-            // --- SIMPLE TIMESTAMP DECIPHER LOG ---
+            // --- ENVIRONMENT LOCKED DIAGNOSTIC LOG ---
             if (branchName !== 'main') {
                 try {
-                    console.clear(); // Wipe away background clutter logs
-                    console.log("=== BAS.MY LIVE APERIODIC LOG PASS ===");
-                    console.log("Total array items returned from backend:", buses ? buses.length : 0);
+                    console.log(`[BAS.MY Data Lock Check] Filtered View [${routeSelection.toUpperCase()}]. Active buses found:`, filtered.length);
                     
-                    if (Array.isArray(buses) && buses.length > 0) {
-                        const firstBus = buses[0];
-                        console.log("Sample Bus Node 0 Schema Payload Structure:", {
-                            id: firstBus.id,
-                            code: firstBus.routeCode,
-                            name: firstBus.routeName,
-                            time: firstBus.timestamp // Verifying if your backend proxy passes this field
+                    if (filtered.length > 0) {
+                        const activeBus = filtered[0];
+                        console.log("[BAS.MY Data Lock Check] Properties for active vehicle:", {
+                            id: activeBus.id,
+                            vehicleId: activeBus.vehicleNumber,
+                            routeCode: activeBus.routeCode,
+                            rawTimestamp: activeBus.timestamp
                         });
+
+                        if (activeBus.timestamp) {
+                            const serverDate = !isNaN(activeBus.timestamp) ? new Date(parseInt(activeBus.timestamp) * 1000) : new Date(activeBus.timestamp);
+                            console.log(`[BAS.MY Data Lock Check] Server Time: ${serverDate.toLocaleTimeString()} | Your System Time: ${new Date().toLocaleTimeString()}`);
+                        }
+                    } else {
+                        console.log(`[BAS.MY Data Lock Check] No active buses found on route ${routeSelection.toUpperCase()}`);
                     }
                 } catch (logErr) {
                     console.warn("Diagnostics log printout interrupted:", logErr);
                 }
             }
-            // -------------------------------------
+            // -----------------------------------------
 
             filtered.forEach(bus => {
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
                  .bindPopup(`
                     <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
-                        <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Active Vehicle Stream</span>
-                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">Bus Code: ${bus.routeCode.toUpperCase()}</strong>
-                        <strong>Vehicle ID:</strong> ${bus.vehicleNumber}<br/>
-                        <strong>Destination:</strong> ${bus.routeName}<br/>
-                        <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">Source: ${selectedSource.toUpperCase()}</span>
+                        <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">${txtPopStream}</span>
+                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">${txtPopCode} ${bus.routeCode.toUpperCase()}</strong>
+                        <strong>${txtPopVehicle}</strong> ${bus.vehicleNumber}<br/>
+                        <strong>${txtPopDestination}</strong> ${bus.routeName}<br/>
+                        <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">${txtPopSource} ${selectedSource.toUpperCase()}</span>
                     </div>
                  `, { maxWidth: 250 })
                  .addTo(busLayer);
             });
-            document.getElementById('refresh-indicator').textContent = `Last sync (${selectedSource}): ${new Date().toLocaleTimeString()}`;
+            document.getElementById('refresh-indicator').textContent = txtLatest + ` (${selectedSource}): ${new Date().toLocaleTimeString()}`;
         })
         .catch(() => {
-            document.getElementById('refresh-indicator').textContent = "Sync execution failure";
+            document.getElementById('refresh-indicator').textContent = txtFailed; // ◄ Applied config string variable
         });
 }
 
