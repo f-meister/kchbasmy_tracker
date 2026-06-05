@@ -75,6 +75,14 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#app-shell')
       .should('have.attr', 'data-txt-failed')
       .and('not.be.empty');
+
+    cy.get('#app-shell')
+      .should('have.attr', 'data-txt-timetable')
+      .and('not.be.empty');
+
+    cy.get('#app-shell')
+      .should('have.attr', 'data-txt-lg-bus')
+      .and('not.be.empty');
   });
 
   it('should load routes_paths.json and populate the dropdown with clean route codes', () => {
@@ -107,7 +115,6 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#info-modal-trigger').click();
     cy.get('#info-modal-overlay').should('be.visible');
     
-    // Verifies that data/strings.yaml values are serving your DOM contents perfectly
     cy.get('#info-modal-card')
       .should('be.visible')
       .and('contain.text', 'About the Tracker');
@@ -165,10 +172,10 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
 
     cy.get('.main-terminal-pulse').first().click({ force: true });
     cy.get('.stop-popup-content').should('be.visible');
-    
+
     cy.get('.popup-label-type')
       .should('be.visible')
-      .and('contain.text', 'INTERCHANGE STATION');
+      .and('contain.text', 'Main Station');
   });
 
 });
