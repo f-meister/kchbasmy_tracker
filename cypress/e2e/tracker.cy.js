@@ -26,6 +26,21 @@ const MOCK_BUSES_RESPONSE = [
   }
 ];
 
+// Mock lookup data mimicking what parse-destinations.js builds from static GTFS
+const MOCK_DESTINATION_LOOKUP = {
+  "q01": {
+    "0": "SURAU DARUL IBADAH",
+    "1": "TERMINAL SAUJANA PARKING"
+  },
+  "q05": {
+    "0": "HENTIAN SMKA MATANG",
+    "1": "TERMINAL SAUJANA PARKING"
+  },
+  "q12": {
+    "0": "TERMINAL SAUJANA"
+  }
+};
+
 const TARGET_CALENDAR_YEAR = new Date().getFullYear().toString();
 
 function bootstrapTrackerWorkspace() {
@@ -49,7 +64,12 @@ function bootstrapTrackerWorkspace() {
     }
   }).as('getOsrmRoute');
 
-  cy.visit('/');
+  // 3. Mount global tracking configurations straight onto the window before document content loads
+  cy.visit('/', {
+    onBeforeLoad(win) {
+      win.destinationLookup = MOCK_DESTINATION_LOOKUP;
+    }
+  });
 }
 
 // ============================================================================
@@ -68,21 +88,10 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
   });
 
   it('should verify Hugo attributes are bound properly on the app shell framework', () => {
-    cy.get('#app-shell')
-      .should('have.attr', 'data-txt-syncing')
-      .and('not.be.empty');
-      
-    cy.get('#app-shell')
-      .should('have.attr', 'data-txt-failed')
-      .and('not.be.empty');
-
-    cy.get('#app-shell')
-      .should('have.attr', 'data-txt-timetable')
-      .and('not.be.empty');
-
-    cy.get('#app-shell')
-      .should('have.attr', 'data-txt-lg-bus')
-      .and('not.be.empty');
+    cy.get('#app-shell').should('have.attr', 'data-txt-syncing').and('not.be.empty');
+    cy.get('#app-shell').should('have.attr', 'data-txt-failed').and('not.be.empty');
+    cy.get('#app-shell').should('have.attr', 'data-txt-timetable').and('not.be.empty');
+    cy.get('#app-shell').should('have.attr', 'data-txt-lg-bus').and('not.be.empty');
   });
 
   it('should load routes_paths.json and populate the dropdown with clean route codes', () => {
@@ -115,13 +124,9 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#info-modal-trigger').click();
     cy.get('#info-modal-overlay').should('be.visible');
     
-    cy.get('#info-modal-card')
-      .should('be.visible')
-      .and('contain.text', 'About the Tracker');
+    cy.get('#info-modal-card').should('be.visible').and('contain.text', 'About the Tracker');
 
-    cy.get('#copyright-year')
-      .should('be.visible')
-      .and('have.text', TARGET_CALENDAR_YEAR);
+    cy.get('#copyright-year').should('be.visible').and('have.text', TARGET_CALENDAR_YEAR);
     
     cy.get('#info-modal-close').click();
     cy.get('#info-modal-overlay').should('not.be.visible');
@@ -149,10 +154,7 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
     cy.get('#route-selector', { timeout: 10000 }).select('all');
 
     cy.get('path.leaflet-interactive', { timeout: 10000 })
-      .filter((i, el) => {
-        const color = el.getAttribute('fill');
-        return color === '#f97316'; 
-      })
+      .filter((i, el) => el.getAttribute('fill') === '#f97316')
       .should('exist')
       .first()
       .click({ force: true });
@@ -163,9 +165,10 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
       .should('contain.text', 'Interchange');
   });
 
-  it('should capture main terminals and verify blue vector circle rendering layers', () => {
+  it('should capture main terminals dynamically and verify blue vector circle rendering layers', () => {
     cy.get('#route-selector').select('all');
 
+    // Confirm promoted station markers match design colors and use class styling names
     cy.get('.main-terminal-pulse', { timeout: 10000 })
       .should('exist')
       .and('have.attr', 'fill', '#2563eb');
@@ -173,9 +176,7 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
     cy.get('.main-terminal-pulse').first().click({ force: true });
     cy.get('.stop-popup-content').should('be.visible');
 
-    cy.get('.popup-label-type')
-      .should('be.visible')
-      .and('contain.text', 'Main Station');
+    cy.get('.popup-label-type').should('be.visible').and('contain.text', 'Main Station');
   });
 
 });
@@ -183,9 +184,9 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
 // ============================================================================
 // SUITE 3: Dynamic Terminal Destination Mapping & Edge Case Resilience
 // ============================================================================
-describe('BAS.MY Kuching Tracker - Dynamic Terminal Destinations', () => {
+describe('BAS.MY KCH Tracker: Dynamic Terminal Destinations', () => {
+  
   beforeEach(() => {
-    // 1. Intercept the real-time API telemetry endpoint to return a predictable, mock bus payload
     cy.intercept('GET', '/api/buses*', [
       {
         id: "vehicle-kch-test-01",
@@ -193,38 +194,31 @@ describe('BAS.MY Kuching Tracker - Dynamic Terminal Destinations', () => {
         latitude: 1.5574,
         longitude: 110.3538,
         routeCode: "Q01",
-        // The tripId matching our pattern: route_direction_service_sequence
         tripId: "207_0_WE_1", 
         directionId: 0,
         routeName: "SAUJANA PARKING - SURAU DARUL IBADAH" // Old generic fallback name
       }
     ]).as('getLiveBuses');
 
-    // 2. Visit the homepage application view
-    cy.visit('/');
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.destinationLookup = MOCK_DESTINATION_LOOKUP;
+      }
+    });
     
-    // 3. Wait for the mocked API request to resolve and populate the map layer canvas
     cy.wait('@getLiveBuses');
   });
 
-  it('should parse the real-time stream parameters and look up the exact terminal destination', () => {
-    // Verify that global context index is mounted securely onto the window space
+  it('should parse real-time parameters and swap the generic long name for the exact final terminus stop', () => {
     cy.window().should('have.property', 'destinationLookup');
 
-    // Assert that the active bus icon is fully initialized and painted onto the Leaflet pane
-    cy.get('.custom-bus-marker', { timeout: 10000 })
-      .should('be.visible')
-      .first()
-      .click({ force: true }); // Force click to override any SVG element layout overlays
+    cy.get('.custom-bus-marker', { timeout: 10000 }).should('be.visible').first().click({ force: true });
 
-    // Verify the popup overlay context mounts seamlessly and pulls the looked-up terminal name
     cy.get('.leaflet-popup-content', { timeout: 5000 }).within(() => {
-      // 1. Confirm that the localized header title layout elements are visible
       cy.contains('Active Vehicle Stream').should('be.visible');
       cy.contains('Bus Code: Q01').should('be.visible');
       
-      // 2. THE CORE ASSERTION: Ensure it skips the generic fallback "SAUJANA PARKING - SURAU DARUL IBADAH" 
-      // and renders the precise looked-up final stop sequence name for Q01 Direction 0 instead!
+      // Asserts that the popup displays the localized destination string without fallback leakage
       cy.contains('Destination:')
         .parent()
         .should('include.text', 'SURAU DARUL IBADAH')
@@ -234,17 +228,16 @@ describe('BAS.MY Kuching Tracker - Dynamic Terminal Destinations', () => {
     });
   });
 
-  it('should remain completely crash-proof if a vehicle transmits an unindexed route code or direction flag', () => {
-    // Overwrite intercept to simulate an anomalous telemetry edge case packet
+  it('should fall back gracefully to the API provider routeName if an unindexed asset is encountered', () => {
     cy.intercept('GET', '/api/buses*', [
       {
         id: "vehicle-kch-anomaly",
         vehicleNumber: "KCH-BUS-ERR",
         latitude: 1.5574,
         longitude: 110.3538,
-        routeCode: "QX99", // Non-existent route code pattern
+        routeCode: "QX99", 
         tripId: "UNKNOWN_TRIP",
-        directionId: 9, // Out of bounds direction flag
+        directionId: 9, 
         routeName: "Emergency Relief Shuttle Service"
       }
     ]).as('getAnomalousBus');
@@ -252,15 +245,59 @@ describe('BAS.MY Kuching Tracker - Dynamic Terminal Destinations', () => {
     cy.reload();
     cy.wait('@getAnomalousBus');
 
-    // Click on the anomalous vehicle marker icon
     cy.get('.custom-bus-marker').first().click({ force: true });
 
-    // Assert that the pipeline falls back gracefully to the standard API routeName instead of crashing the thread
     cy.get('.leaflet-popup-content').within(() => {
       cy.contains('Bus Code: QX99').should('be.visible');
-      cy.contains('Destination:')
-        .parent()
-        .should('include.text', 'Emergency Relief Shuttle Service');
+      cy.contains('Destination:').parent().should('include.text', 'Emergency Relief Shuttle Service');
     });
   });
+
+});
+
+// ============================================================================
+// SUITE 4: Destination Dictionary Integrity & Sanitization Robustness
+// ============================================================================
+describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
+
+  it('should remain completely case and whitespace-insensitive during terminal lookups', () => {
+    cy.intercept('GET', '/api/buses*', [
+      {
+        id: "vehicle-kch-space-test",
+        vehicleNumber: "KCH-SPACE-1",
+        latitude: 1.5574,
+        longitude: 110.3538,
+        routeCode: "Q01",
+        tripId: "207_0_WE_1",
+        directionId: 0,
+        routeName: "Generic Route String"
+      }
+    ]).as('getSpacingBus');
+
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        // Inject messy whitespace and casing into the lookup dictionary to test matching resilience
+        win.destinationLookup = {
+          "q01": {
+            "0": "   suRAU daRUl iBAdah   "
+          }
+        };
+      }
+    });
+
+    cy.wait('@getSpacingBus');
+
+    // Force map update check to ensure messy strings are correctly matched and evaluated as a pulsing terminus
+    cy.window().then((win) => {
+      win.renderFilteredBusStops('all');
+    });
+
+    // Verify the system successfully matches the string, promotes the node, and handles marker popup triggers
+    cy.get('path.main-terminal-pulse').should('exist').first().click({ force: true });
+    
+    cy.get('.leaflet-popup-content').within(() => {
+      cy.contains('🚨 Main Station').should('be.visible');
+    });
+  });
+
 });

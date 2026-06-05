@@ -197,15 +197,27 @@ function renderFilteredBusStops(selectedCode) {
         });
     }
 
+    // --- DYNAMICALLY EXTRACT ALL VERIFIED TERMINUS ENDPOINTS ---
+    const terminalNames = new Set();
+    if (window.destinationLookup) {
+        Object.values(window.destinationLookup).forEach(directions => {
+            Object.values(directions).forEach(name => {
+                if (name) terminalNames.add(name.toLowerCase().trim());
+            });
+        });
+    }
+
     L.geoJSON({ type: "FeatureCollection", features: targetFeatures }, {
         pointToLayer: (feature, latlng) => {
             const stopId = feature.properties.stop_id;
             const stopName = feature.properties.stopName || '';
             const passingRoutes = stopRoutesIndex[stopId] || [];
             
-            // Intercept anchor hub terminal strings safely from GeoJSON stream fields
-            const lowerStopName = stopName.toLowerCase();
-            const isMainTerminal = lowerStopName.includes("saujana parking") || lowerStopName.includes("open air market");
+            // Clean up the stop name string for an exact match against our terminal set
+            const lowerStopName = stopName.toLowerCase().trim();
+            
+            // ✅ DYNAMIC HUB EVALUATION: Checks if the stop is a terminal station for any active line
+            const isMainTerminal = terminalNames.has(lowerStopName);
             const isInterchange = passingRoutes.length > 1;
 
             let markerRadius = 8;
