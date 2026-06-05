@@ -1,54 +1,35 @@
-// --- CENTRALIZED NATIVE GTFS-RT MOCK STUBS (REPLICATING REAL PROTOC WIRE SHAPES) ---
-const MOCK_BUSES_RESPONSE = {
-  header: {
-    gtfsRealtimeVersion: "2.0",
-    incrementality: "FULL_DATASET",
-    timestamp: "1780047063"
+// --- CENTRALIZED CONFIGURATION MOCK STUBS (ALIGNED WITH PROXY WORKER ARRAY OUTPUT) ---
+const MOCK_BUSES_RESPONSE = [
+  {
+    id: "MADANI5021",
+    vehicleNumber: "MADANI5021",
+    latitude: 1.573043,
+    longitude: 110.301689,
+    bearing: 90.9,
+    tripId: "210_1_WD_13",
+    timestamp: "1780047059",
+    routeCode: "q05",
+    shapeId: "shape-q05",
+    routeName: "Kuching to Bako"
   },
-  entity: [
-    {
-      id: "MADANI5021",
-      vehicle: {
-        trip: {
-          tripId: "210_1_WD_13" // Maps cleanly to Q05 via your trip_lookup.json prefix rule
-        },
-        position: {
-          latitude: 1.573043,
-          longitude: 110.301689,
-          bearing: 90.9
-        },
-        timestamp: "1780047059",
-        vehicle: {
-          id: "MADANI5021",
-          label: "MADANI5021"
-        }
-      }
-    },
-    {
-      id: "MADANI8013",
-      vehicle: {
-        trip: {
-          tripId: "264_0_WD_13" // Maps cleanly to Q12 via your trip_lookup.json prefix rule
-        },
-        position: {
-          latitude: 1.557926,
-          longitude: 110.342201,
-          bearing: 148.6
-        },
-        timestamp: "1780047059",
-        vehicle: {
-          id: "MADANI8013",
-          label: "MADANI8013"
-        }
-      }
-    }
-  ]
-};
+  {
+    id: "MADANI8013",
+    vehicleNumber: "MADANI8013",
+    latitude: 1.557926,
+    longitude: 110.342201,
+    bearing: 148.6,
+    tripId: "264_0_WD_13",
+    timestamp: "1780047059",
+    routeCode: "q12",
+    shapeId: "shape-q12",
+    routeName: "Kuching to Airport"
+  }
+];
 
 const TARGET_CALENDAR_YEAR = new Date().getFullYear().toString();
 
 function bootstrapTrackerWorkspace() {
-  // 1. Intercept the local proxy endpoint and deliver the verified nested payload structure
+  // 1. Intercept proxy endpoint and serve the flat array format returned by the Worker
   cy.intercept('GET', '**/api/buses*', {
     statusCode: 200,
     body: MOCK_BUSES_RESPONSE,
@@ -86,6 +67,16 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('have.class', 'leaflet-container');
   });
 
+  it('should verify Hugo attributes are bound properly on the app shell framework', () => {
+    cy.get('#app-shell')
+      .should('have.attr', 'data-txt-syncing')
+      .and('not.be.empty');
+      
+    cy.get('#app-shell')
+      .should('have.attr', 'data-txt-failed')
+      .and('not.be.empty');
+  });
+
   it('should load routes_paths.json and populate the dropdown with clean route codes', () => {
     cy.get('#route-selector', { timeout: 10000 })
       .should('be.visible')
@@ -97,14 +88,16 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       });
   });
 
-  it('should securely handle and parse the nested real-time API payload object', () => {
+  it('should securely handle and parse the normalized real-time API array telemetry payload', () => {
     cy.wait('@getLiveBuses', { timeout: 10000 }).then((interception) => {
       expect(interception.response.statusCode).to.eq(200);
-      expect(interception.response.body.entity).to.be.an('array');
-      expect(interception.response.body.entity).to.have.length(2);
+      expect(interception.response.body).to.be.an('array');
+      expect(interception.response.body).to.have.length(2);
       
-      const sampleEntity = interception.response.body.entity[0];
-      expect(sampleEntity.vehicle.trip.tripId).to.include('210');
+      const sampleBus = interception.response.body[0];
+      expect(sampleBus.routeCode).to.eq('q05');
+      expect(sampleBus.vehicleNumber).to.eq('MADANI5021');
+      expect(sampleBus.timestamp).to.eq('1780047059');
     });
   });
 
@@ -113,6 +106,8 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
 
     cy.get('#info-modal-trigger').click();
     cy.get('#info-modal-overlay').should('be.visible');
+    
+    // Verifies that data/strings.yaml values are serving your DOM contents perfectly
     cy.get('#info-modal-card')
       .should('be.visible')
       .and('contain.text', 'About the Tracker');
@@ -125,7 +120,7 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#info-modal-overlay').should('not.be.visible');
   });
 
-  it('should visually render the map legend context with the circle active bus marker configuration', () => {
+  it('should visually render the map legend context layout component layers', () => {
     cy.get('.map-legend')
       .should('be.visible')
       .and('contain.text', 'Bus Stop')
@@ -158,7 +153,7 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
     cy.get('.stop-popup-content')
       .should('be.visible')
       .find('.popup-label-type')
-      .should('contain.text', 'Transit Interchange');
+      .should('contain.text', 'Interchange');
   });
 
   it('should capture main terminals and verify blue vector circle rendering layers', () => {
@@ -171,7 +166,7 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
     cy.get('.main-terminal-pulse').first().click({ force: true });
     cy.get('.stop-popup-content').should('be.visible');
     
-    cy.get('.popup-label-terminal')
+    cy.get('.popup-label-type')
       .should('be.visible')
       .and('contain.text', 'INTERCHANGE STATION');
   });

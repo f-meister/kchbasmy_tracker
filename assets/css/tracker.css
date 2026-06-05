@@ -356,7 +356,7 @@ h1 {
     background-color: #1e293b;
 }
 
-.modal-btn-email {
+.modal-btn-contact {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -370,7 +370,7 @@ h1 {
     font-size: 13px;
 }
 
-.modal-btn-email:hover {
+.modal-btn-contact:hover {
     background-color: #e2e8f0;
     color: #0f172a;
 }

@@ -1,6 +1,17 @@
-// --- RUNTIME ENVIRONMENT AUTO-LOCK & GA4 FILTER ---
+// --- RUNTIME ENVIRONMENT CONFIGURATION & L10N STRINGS ---
 const appShell = document.getElementById('app-shell');
 const branchName = appShell ? appShell.getAttribute('data-branch') : '';
+
+// Pull the Hugo-compiled strings dynamically from the DOM dataset wrapper attributes
+const txtSyncing = appShell ? appShell.getAttribute('data-txt-syncing') : 'Syncing positions...';
+const txtFailed  = appShell ? appShell.getAttribute('data-txt-failed')  : 'Sync execution failure';
+const txtPrompt  = appShell ? appShell.getAttribute('data-txt-prompt')  : '◄ Choose the bus route you want to track';
+const txtTimetable = appShell ? appShell.getAttribute('data-txt-timetable') : 'Click here for %ROUTE% Transit Map';
+const txtLgPrompt      = appShell ? appShell.getAttribute('data-txt-lg-prompt')      : 'Tap icons for info!';
+const txtLgStop        = appShell ? appShell.getAttribute('data-txt-lg-stop')        : 'Bus Stop';
+const txtLgInterchange = appShell ? appShell.getAttribute('data-txt-lg-interchange') : 'Interchange';
+const txtLgStation     = appShell ? appShell.getAttribute('data-txt-lg-station')     : 'Main Station';
+const txtLgBus         = appShell ? appShell.getAttribute('data-txt-lg-bus')         : 'Active Bus';
 
 if (branchName === 'main') {
     const panel = document.getElementById('feed-control-wrapper');
@@ -31,25 +42,25 @@ legend.onAdd = function () {
     const div = L.DomUtil.create('div', 'map-legend');
     div.innerHTML = `
         <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic;">
-        Tap icons for info!
+        ${txtLgPrompt}
         </div>
         <div class="legend-item">
             <span class="legend-marker-stop"></span>
-            <span>Bus Stop</span>
+            <span>${txtLgStop}</span>
         </div>
         <div class="legend-item">
             <span class="legend-marker-stop" style="background-color: #f97316 !important;"></span>
-            <span>Interchange</span>
+            <span>${txtLgInterchange}</span>
         </div>
         <div class="legend-item">
             <span class="legend-marker-stop" style="background-color: #2563eb !important; width: 14px; height: 14px; margin-left: -2px; margin-right: -2px;"></span>
-            <span>Main Station</span>
+            <span>${txtLgStation}</span>
         </div>
         <div class="legend-item">
             <div class="legend-bus-icon-preview">
                 <svg class="legend-svg-use"><use href="#icon-bus"></use></svg>
             </div>
-            <span>Active Bus</span>
+            <span>${txtLgBus}</span>
         </div>
     `;
     return div;
@@ -107,7 +118,7 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
     if (selectedRoute === 'all') {
         if (isInitialBoot) {
             label.classList.add('route-prompt-text');
-            label.innerHTML = `◄ Choose the bus route you want to track`;
+            label.innerHTML = txtPrompt; // ◄ Bound to strings.yaml configuration
             label.style.display = 'inline-block';
             label.style.opacity = '1';
             return;
@@ -118,7 +129,7 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
         setTimeout(() => {
             if (document.getElementById('route-selector').value === 'all') {
                 label.classList.add('route-prompt-text');
-                label.innerHTML = `◄ Choose the bus route you want to track`;
+                label.innerHTML = txtPrompt; // ◄ Bound to strings.yaml configuration
                 label.style.display = 'inline-block';
                 void label.offsetWidth; // Trigger reflow
                 label.style.opacity = '1';
@@ -153,7 +164,10 @@ function updateTimetableLink(selectedRoute) {
         container.style.display = 'none';
     } else {
         anchor.href = activeLink;
-        linkText.textContent = `Click here for ${selectedRoute.toUpperCase()} Transit Map`;
+        
+        // Dynamic Replacement: Swaps the placeholder token with the active route code uppercase string
+        linkText.textContent = txtTimetable.replace('%ROUTE%', selectedRoute.toUpperCase());
+        
         container.style.display = 'inline-flex';
     }
 }
@@ -310,7 +324,7 @@ function syncLiveBusTracker() {
         if (checkedRadio) selectedSource = checkedRadio.value;
     }
     
-    document.getElementById('refresh-indicator').textContent = "Syncing positions...";
+    document.getElementById('refresh-indicator').textContent = txtSyncing; // ◄ Applied config string variable
     const apiEndpoint = selectedSource === 'mock' ? '/api/buses?mock=true' : '/api/buses';
 
     const busIcon = L.divIcon({
@@ -330,31 +344,37 @@ function syncLiveBusTracker() {
         .then(buses => {
             busLayer.clearLayers();
             const targetBuses = Array.isArray(buses) ? buses : [];
+            
             const filtered = routeSelection === 'all' 
                 ? targetBuses 
-                : targetBuses.filter(b => b.routeCode.toLowerCase() === routeSelection.toLowerCase());
+                : targetBuses.filter(b => b.routeCode && b.routeCode.toLowerCase() === routeSelection.toLowerCase());
             
-            // --- SIMPLE TIMESTAMP DECIPHER LOG ---
+            // --- ENVIRONMENT LOCKED DIAGNOSTIC LOG ---
             if (branchName !== 'main') {
                 try {
-                    console.clear(); // Wipe away background clutter logs
-                    console.log("=== BAS.MY LIVE APERIODIC LOG PASS ===");
-                    console.log("Total array items returned from backend:", buses ? buses.length : 0);
+                    console.log(`[BAS.MY Data Lock Check] Filtered View [${routeSelection.toUpperCase()}]. Active buses found:`, filtered.length);
                     
-                    if (Array.isArray(buses) && buses.length > 0) {
-                        const firstBus = buses[0];
-                        console.log("Sample Bus Node 0 Schema Payload Structure:", {
-                            id: firstBus.id,
-                            code: firstBus.routeCode,
-                            name: firstBus.routeName,
-                            time: firstBus.timestamp // Verifying if your backend proxy passes this field
+                    if (filtered.length > 0) {
+                        const activeBus = filtered[0];
+                        console.log("[BAS.MY Data Lock Check] Properties for active vehicle:", {
+                            id: activeBus.id,
+                            vehicleId: activeBus.vehicleNumber,
+                            routeCode: activeBus.routeCode,
+                            rawTimestamp: activeBus.timestamp
                         });
+
+                        if (activeBus.timestamp) {
+                            const serverDate = !isNaN(activeBus.timestamp) ? new Date(parseInt(activeBus.timestamp) * 1000) : new Date(activeBus.timestamp);
+                            console.log(`[BAS.MY Data Lock Check] Server Time: ${serverDate.toLocaleTimeString()} | Your System Time: ${new Date().toLocaleTimeString()}`);
+                        }
+                    } else {
+                        console.log(`[BAS.MY Data Lock Check] No active buses found on route ${routeSelection.toUpperCase()}`);
                     }
                 } catch (logErr) {
                     console.warn("Diagnostics log printout interrupted:", logErr);
                 }
             }
-            // -------------------------------------
+            // -----------------------------------------
 
             filtered.forEach(bus => {
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
@@ -372,7 +392,7 @@ function syncLiveBusTracker() {
             document.getElementById('refresh-indicator').textContent = `Last sync (${selectedSource}): ${new Date().toLocaleTimeString()}`;
         })
         .catch(() => {
-            document.getElementById('refresh-indicator').textContent = "Sync execution failure";
+            document.getElementById('refresh-indicator').textContent = txtFailed; // ◄ Applied config string variable
         });
 }
 

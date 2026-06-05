@@ -1,0 +1,31 @@
+metadata:
+  title: "BAS.MY KCH Tracker"
+
+map_controls:
+  label_route: "Bus Route:"
+  option_all: "All"
+  label_feed: "Data Feed Source:"
+  feed_live: "Live API"
+  feed_mock: "Simulation (Mock)"
+  timetable_fallback: "Transit Map"
+  route_prompt: "◄ Choose the bus route you want to track"
+  syncing: "Syncing positions..."
+  sync_failed: "Sync execution failure"
+  timetable_text: "Click here for %ROUTE% Transit Map"
+  legend_prompt: "Tap icons for info!"
+  legend_stop: "Bus Stop"
+  legend_interchange: "Interchange"
+  legend_station: "Main Station"
+  legend_bus: "Active Bus"
+
+modal_about:
+  header: "🇲🇾 About the Tracker"
+  tagline: "Check routes, stops, interchanges, and transit maps for BAS.MY in Kuching, Malaysia!"
+  features_title: "Latest Updates"
+  features_list:
+    - "05/06/2026: backend refactor for better maintainability"
+    - "30/05/2026: remove ghost bus + fixed missing bus icon (API data changes)"
+    - "29/05/2026: fix return line display on route"
+  contact_title: "Get in Touch"
+  btn_github: "View GitHub Project"
+  btn_contact: "Feedback & Suggestions"
