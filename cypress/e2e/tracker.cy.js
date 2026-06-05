@@ -179,3 +179,88 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
   });
 
 });
+
+// ============================================================================
+// SUITE 3: Dynamic Terminal Destination Mapping & Edge Case Resilience
+// ============================================================================
+describe('BAS.MY Kuching Tracker - Dynamic Terminal Destinations', () => {
+  beforeEach(() => {
+    // 1. Intercept the real-time API telemetry endpoint to return a predictable, mock bus payload
+    cy.intercept('GET', '/api/buses*', [
+      {
+        id: "vehicle-kch-test-01",
+        vehicleNumber: "KCH-BUS-9999",
+        latitude: 1.5574,
+        longitude: 110.3538,
+        routeCode: "Q01",
+        // The tripId matching our pattern: route_direction_service_sequence
+        tripId: "207_0_WE_1", 
+        directionId: 0,
+        routeName: "SAUJANA PARKING - SURAU DARUL IBADAH" // Old generic fallback name
+      }
+    ]).as('getLiveBuses');
+
+    // 2. Visit the homepage application view
+    cy.visit('/');
+    
+    // 3. Wait for the mocked API request to resolve and populate the map layer canvas
+    cy.wait('@getLiveBuses');
+  });
+
+  it('should parse the real-time stream parameters and look up the exact terminal destination', () => {
+    // Verify that global context index is mounted securely onto the window space
+    cy.window().should('have.property', 'destinationLookup');
+
+    // Assert that the active bus icon is fully initialized and painted onto the Leaflet pane
+    cy.get('.custom-bus-marker', { timeout: 10000 })
+      .should('be.visible')
+      .first()
+      .click({ force: true }); // Force click to override any SVG element layout overlays
+
+    // Verify the popup overlay context mounts seamlessly and pulls the looked-up terminal name
+    cy.get('.leaflet-popup-content', { timeout: 5000 }).within(() => {
+      // 1. Confirm that the localized header title layout elements are visible
+      cy.contains('Active Vehicle Stream').should('be.visible');
+      cy.contains('Bus Code: Q01').should('be.visible');
+      
+      // 2. THE CORE ASSERTION: Ensure it skips the generic fallback "SAUJANA PARKING - SURAU DARUL IBADAH" 
+      // and renders the precise looked-up final stop sequence name for Q01 Direction 0 instead!
+      cy.contains('Destination:')
+        .parent()
+        .should('include.text', 'SURAU DARUL IBADAH')
+        .and('not.include.text', 'SAUJANA PARKING - SURAU DARUL IBADAH');
+
+      cy.contains('Vehicle ID: KCH-BUS-9999').should('be.visible');
+    });
+  });
+
+  it('should remain completely crash-proof if a vehicle transmits an unindexed route code or direction flag', () => {
+    // Overwrite intercept to simulate an anomalous telemetry edge case packet
+    cy.intercept('GET', '/api/buses*', [
+      {
+        id: "vehicle-kch-anomaly",
+        vehicleNumber: "KCH-BUS-ERR",
+        latitude: 1.5574,
+        longitude: 110.3538,
+        routeCode: "QX99", // Non-existent route code pattern
+        tripId: "UNKNOWN_TRIP",
+        directionId: 9, // Out of bounds direction flag
+        routeName: "Emergency Relief Shuttle Service"
+      }
+    ]).as('getAnomalousBus');
+
+    cy.reload();
+    cy.wait('@getAnomalousBus');
+
+    // Click on the anomalous vehicle marker icon
+    cy.get('.custom-bus-marker').first().click({ force: true });
+
+    // Assert that the pipeline falls back gracefully to the standard API routeName instead of crashing the thread
+    cy.get('.leaflet-popup-content').within(() => {
+      cy.contains('Bus Code: QX99').should('be.visible');
+      cy.contains('Destination:')
+        .parent()
+        .should('include.text', 'Emergency Relief Shuttle Service');
+    });
+  });
+});
