@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -21,9 +21,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm' # Automatically caches node_modules dependencies between pipeline runs
 
-      - name: Install Project Workspace
-        run: npm install
+      - name: Install Project Workspace (Deterministic)
+        run: npm ci --no-audit --no-fund # ◄ Silent, fast, secure pipeline install
 
       - name: Execute Automated Static Ingestion Script
         run: bash .devcontainer/setup.sh
@@ -31,7 +32,7 @@ jobs:
       - name: Setup Hugo Compiler
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: 'latest'
+          hugo-version: '0.161.1'
           extended: true # Essential if you use Sass/SCSS features down the road
       
       - name: Compile Hugo Assets Manually
@@ -45,12 +46,10 @@ jobs:
         with:
           # Starts local wrangler dev/pages server in the background
           start: npm run start
-          # Wait explicitly for Hugo tracker sub-route path to return 200 OK
+          # Wait explicitly for the consolidated Hugo tracker root page to return a clean 200 OK
           wait-on: 'http://localhost:8788'
-          wait-on-timeout: 30
-        env:
-          # This forces Cypress's internal wait-on utility tool to accept 404 statuses as alive
-          WAIT_ON_STATUS_TYPE: 'any'
+          wait-on-timeout: 120 # ◄ Extends boundary limits to 2 minutes to eliminate sudden timeout crashes
+        # env block removed entirely. We want wait-on to explicitly reject 404s and 500s!
 
       - name: Archive Cypress Failure Screen Captures
         uses: actions/upload-artifact@v4
@@ -68,4 +67,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.98.0'
           command: pages deploy public --project-name="kchbasmy-tracker" --branch="${{ github.ref_name }}"
