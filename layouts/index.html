@@ -28,6 +28,7 @@
     <div class="tracker-container" id="app-shell" 
         data-branch="{{ getenv "CF_PAGES_BRANCH" }}"
         data-txt-syncing="{{ .Site.Data.strings.map_controls.syncing }}"
+        data-txt-latest="{{ .Site.Data.strings.map_controls.sync_latest }}"
         data-txt-failed="{{ .Site.Data.strings.map_controls.sync_failed }}"
         data-txt-prompt="{{ .Site.Data.strings.map_controls.route_prompt }}"
         data-txt-timetable="{{ .Site.Data.strings.map_controls.timetable_text }}"
@@ -35,7 +36,13 @@
         data-txt-lg-stop="{{ .Site.Data.strings.map_controls.legend_stop }}"
         data-txt-lg-interchange="{{ .Site.Data.strings.map_controls.legend_interchange }}"
         data-txt-lg-station="{{ .Site.Data.strings.map_controls.legend_station }}"
-        data-txt-lg-bus="{{ .Site.Data.strings.map_controls.legend_bus }}">
+        data-txt-lg-bus="{{ .Site.Data.strings.map_controls.legend_bus }}"
+        data-txt-pop-stream="{{ .Site.Data.strings.popups.bus_stream }}"
+        data-txt-pop-code="{{ .Site.Data.strings.popups.bus_code }}"
+        data-txt-pop-vehicle="{{ .Site.Data.strings.popups.vehicle_id }}"
+        data-txt-pop-destination="{{ .Site.Data.strings.popups.destination }}"
+        data-txt-pop-source="{{ .Site.Data.strings.popups.source }}"
+        data-txt-pop-routes="{{ .Site.Data.strings.popups.routes }}">
 
         <h3 class="app-header">
             <div class="brand-wrapper">

@@ -3,15 +3,22 @@ const appShell = document.getElementById('app-shell');
 const branchName = appShell ? appShell.getAttribute('data-branch') : '';
 
 // Pull the Hugo-compiled strings dynamically from the DOM dataset wrapper attributes
-const txtSyncing = appShell ? appShell.getAttribute('data-txt-syncing') : 'Syncing positions...';
-const txtFailed  = appShell ? appShell.getAttribute('data-txt-failed')  : 'Sync execution failure';
-const txtPrompt  = appShell ? appShell.getAttribute('data-txt-prompt')  : '◄ Choose the bus route you want to track';
-const txtTimetable = appShell ? appShell.getAttribute('data-txt-timetable') : 'Click here for %ROUTE% Transit Map';
-const txtLgPrompt      = appShell ? appShell.getAttribute('data-txt-lg-prompt')      : 'Tap icons for info!';
-const txtLgStop        = appShell ? appShell.getAttribute('data-txt-lg-stop')        : 'Bus Stop';
-const txtLgInterchange = appShell ? appShell.getAttribute('data-txt-lg-interchange') : 'Interchange';
-const txtLgStation     = appShell ? appShell.getAttribute('data-txt-lg-station')     : 'Main Station';
-const txtLgBus         = appShell ? appShell.getAttribute('data-txt-lg-bus')         : 'Active Bus';
+const txtSyncing        = appShell?.dataset.txtSyncing        || 'Syncing positions...';
+const txtFailed         = appShell?.dataset.txtFailed         || 'Sync execution failure';
+const txtLatest         = appShell?.dataset.txtLatest         || 'Last sync';
+const txtPrompt         = appShell?.dataset.txtPrompt         || '◄ Choose the bus route you want to track';
+const txtTimetable      = appShell?.dataset.txtTimetable      || 'Click here for %ROUTE% Transit Map';
+const txtLgPrompt       = appShell?.dataset.txtLgPrompt       || 'Tap icons for info!';
+const txtLgStop         = appShell?.dataset.txtLgStop         || 'Bus Stop';
+const txtLgInterchange  = appShell?.dataset.txtLgInterchange  || 'Interchange';
+const txtLgStation      = appShell?.dataset.txtLgStation      || 'Main Station';
+const txtLgBus          = appShell?.dataset.txtLgBus          || 'Active Bus';
+const txtPopRoutes      = appShell?.dataset.txtPopRoutes      || 'Available Routes';
+const txtPopStream      = appShell?.dataset.txtPopStream      || 'Active Vehicle Stream';
+const txtPopCode        = appShell?.dataset.txtPopCode        || 'Bus Code:';
+const txtPopVehicle     = appShell?.dataset.txtPopVehicle     || 'Vehicle ID:';
+const txtPopDestination = appShell?.dataset.txtPopDestination || 'Destination:';
+const txtPopSource      = appShell?.dataset.txtPopSource      || 'Source:';
 
 if (branchName === 'main') {
     const panel = document.getElementById('feed-control-wrapper');
@@ -203,18 +210,18 @@ function renderFilteredBusStops(selectedCode) {
 
             let markerRadius = 8;
             let markerColor = "#10b981"; 
-            let popupHeaderType = "Bus Stop";
+            let popupHeaderType = txtLgStop; // Default to "Bus Stop" label, dynamically pulled from strings.yaml configuration
             let customMarkerClass = "";
 
             if (isMainTerminal) {
                 markerRadius = 14;           // ~75% upscale expansion factor
                 markerColor = "#2563eb";    // Brand blue main terminal identifier (matches bus icon!)
-                popupHeaderType = "🚨 INTERCHANGE STATION";
+                popupHeaderType = "🚨 " + txtLgStation;
                 customMarkerClass = "main-terminal-pulse"; 
             } else if (isInterchange) {
                 markerRadius = 8;
                 markerColor = "#f97316";    // Orange lane crossover marker
-                popupHeaderType = "🔄 Transit Interchange";
+                popupHeaderType = "🔄 " + txtLgInterchange;
             }
 
             const routeBadgesHtml = passingRoutes.sort().map(r => 
@@ -234,7 +241,7 @@ function renderFilteredBusStops(selectedCode) {
                     <span class="popup-label-type ${isMainTerminal ? 'popup-label-terminal' : ''}">${popupHeaderType}</span>
                     <strong class="popup-stop-title ${isMainTerminal ? 'popup-title-terminal' : ''}">${stopName}</strong>
                     <div class="popup-routes-list-wrapper">
-                        <span class="popup-routes-label">Available Routes:</span>
+                        <span class="popup-routes-label">${txtPopRoutes}</span>
                         <div class="popup-badges-grid">${routeBadgesHtml}</div>
                     </div>
                 </div>
@@ -380,16 +387,16 @@ function syncLiveBusTracker() {
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
                  .bindPopup(`
                     <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
-                        <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">Active Vehicle Stream</span>
-                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">Bus Code: ${bus.routeCode.toUpperCase()}</strong>
-                        <strong>Vehicle ID:</strong> ${bus.vehicleNumber}<br/>
-                        <strong>Destination:</strong> ${bus.routeName}<br/>
-                        <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">Source: ${selectedSource.toUpperCase()}</span>
+                        <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">${txtPopStream}</span>
+                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">${txtPopCode} ${bus.routeCode.toUpperCase()}</strong>
+                        <strong>${txtPopVehicle}</strong> ${bus.vehicleNumber}<br/>
+                        <strong>${txtPopDestination}</strong> ${bus.routeName}<br/>
+                        <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">${txtPopSource} ${selectedSource.toUpperCase()}</span>
                     </div>
                  `, { maxWidth: 250 })
                  .addTo(busLayer);
             });
-            document.getElementById('refresh-indicator').textContent = `Last sync (${selectedSource}): ${new Date().toLocaleTimeString()}`;
+            document.getElementById('refresh-indicator').textContent = txtLatest + ` (${selectedSource}): ${new Date().toLocaleTimeString()}`;
         })
         .catch(() => {
             document.getElementById('refresh-indicator').textContent = txtFailed; // ◄ Applied config string variable

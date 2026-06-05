@@ -11,12 +11,21 @@ map_controls:
   route_prompt: "◄ Choose the bus route you want to track"
   syncing: "Syncing positions..."
   sync_failed: "Sync execution failure"
+  sync_latest: "Last sync"
   timetable_text: "Click here for %ROUTE% Transit Map"
   legend_prompt: "Tap icons for info!"
   legend_stop: "Bus Stop"
   legend_interchange: "Interchange"
   legend_station: "Main Station"
   legend_bus: "Active Bus"
+
+popups:
+  bus_stream: "Active Vehicle Stream"
+  bus_code: "Bus Code:"
+  vehicle_id: "Vehicle ID:"
+  destination: "Destination:"
+  source: "Source:"
+  routes: "Available Routes"
 
 modal_about:
   header: "🇲🇾 About the Tracker"
