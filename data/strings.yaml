@@ -32,8 +32,8 @@ modal_about:
   tagline: "Check routes, stops, interchanges, and transit maps for BAS.MY in Kuching, Malaysia!"
   features_title: "Latest Updates"
   features_list:
-    - "06/06/2026: added dynamic Main Station icons and bus destination names"
-    - "05/06/2026: backend refactor for better maintainability"
+    - "06/06/2026: add Main Station icons + route destination popups, fix weekend bus routes"
+    - "05/06/2026: refactor code for better maintainability"
     - "30/05/2026: remove ghost bus + fixed missing bus icon (API data changes)"
   contact_title: "Get in Touch"
   btn_github: "View GitHub Project"

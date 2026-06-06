@@ -107,11 +107,12 @@ function initializeRouteSelector() {
             });
         }
 
-        const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode).filter(Boolean);
+        // Force selector option value properties to lowercase to align with tracking layers
+        const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode ? f.properties.routeCode.toLowerCase() : '').filter(Boolean);
         [...new Set(trackingCodes)].sort().forEach(code => {
             const opt = document.createElement('option');
-            opt.value = code;
-            opt.textContent = `${code.toUpperCase()}`;
+            opt.value = code; // Lowercase control token (e.g. "q14")
+            opt.textContent = `${code.toUpperCase()}`; // Clean rendering text for users (e.g. "Q14")
             selector.appendChild(opt);
         });
     }
@@ -125,20 +126,19 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
     if (selectedRoute === 'all') {
         if (isInitialBoot) {
             label.classList.add('route-prompt-text');
-            label.innerHTML = txtPrompt; // ◄ Bound to strings.yaml configuration
+            label.innerHTML = txtPrompt;
             label.style.display = 'inline-block';
             label.style.opacity = '1';
             return;
         }
 
-        // Standard dynamic runtime path (fade out first, then swap content)
         label.style.opacity = '0';
         setTimeout(() => {
             if (document.getElementById('route-selector').value === 'all') {
                 label.classList.add('route-prompt-text');
-                label.innerHTML = txtPrompt; // ◄ Bound to strings.yaml configuration
+                label.innerHTML = txtPrompt;
                 label.style.display = 'inline-block';
-                void label.offsetWidth; // Trigger reflow
+                void label.offsetWidth; 
                 label.style.opacity = '1';
             }
         }, 200);
@@ -171,10 +171,7 @@ function updateTimetableLink(selectedRoute) {
         container.style.display = 'none';
     } else {
         anchor.href = activeLink;
-        
-        // Dynamic Replacement: Swaps the placeholder token with the active route code uppercase string
         linkText.textContent = txtTimetable.replace('%ROUTE%', selectedRoute.toUpperCase());
-        
         container.style.display = 'inline-flex';
     }
 }
@@ -187,17 +184,13 @@ function renderFilteredBusStops(selectedCode) {
     if (selectedCode !== 'all') {
         const lowerCode = selectedCode.toLowerCase();
         
-        // Dynamic Extraction: Read live relations directly from stopRoutesIndex
         targetFeatures = stopsData.features.filter(f => {
             const stopId = f.properties.stop_id;
             const passingRoutes = stopRoutesIndex[stopId] || [];
-            
-            // Checks for an inclusive match regardless of direction loops
             return passingRoutes.some(r => r.toLowerCase() === lowerCode);
         });
     }
 
-    // --- DYNAMICALLY EXTRACT ALL VERIFIED TERMINUS ENDPOINTS ---
     const terminalNames = new Set();
     if (window.destinationLookup) {
         Object.values(window.destinationLookup).forEach(directions => {
@@ -212,27 +205,24 @@ function renderFilteredBusStops(selectedCode) {
             const stopId = feature.properties.stop_id;
             const stopName = feature.properties.stopName || '';
             const passingRoutes = stopRoutesIndex[stopId] || [];
-            
-            // Clean up the stop name string for an exact match against our terminal set
             const lowerStopName = stopName.toLowerCase().trim();
             
-            // ✅ DYNAMIC HUB EVALUATION: Checks if the stop is a terminal station for any active line
             const isMainTerminal = terminalNames.has(lowerStopName);
             const isInterchange = passingRoutes.length > 1;
 
             let markerRadius = 8;
             let markerColor = "#10b981"; 
-            let popupHeaderType = txtLgStop; // Default to "Bus Stop" label, dynamically pulled from strings.yaml configuration
+            let popupHeaderType = txtLgStop; 
             let customMarkerClass = "";
 
             if (isMainTerminal) {
-                markerRadius = 14;           // ~75% upscale expansion factor
-                markerColor = "#2563eb";    // Brand blue main terminal identifier (matches bus icon!)
+                markerRadius = 14;           
+                markerColor = "#2563eb";    
                 popupHeaderType = "🚨 " + txtLgStation;
                 customMarkerClass = "main-terminal-pulse"; 
             } else if (isInterchange) {
                 markerRadius = 8;
-                markerColor = "#f97316";    // Orange lane crossover marker
+                markerColor = "#f97316";    
                 popupHeaderType = "🔄 " + txtLgInterchange;
             }
 
@@ -272,25 +262,48 @@ function renderSelectedRouteLine(code) {
 
     const lowerCode = code.toLowerCase();
 
-    // 1. PERFORMANCE CHECK: If we already hit this route before, pull it instantly from cache!
     if (routingCache[lowerCode]) {
         routingCache[lowerCode].forEach(polyline => polyline.addTo(pathLayer));
         
-        // Calculate the unified bounding box layout safely from cache
         const combinedBounds = L.latLngBounds();
         routingCache[lowerCode].forEach(polyline => combinedBounds.extend(polyline.getBounds()));
         if (combinedBounds.isValid()) {
             map.fitBounds(combinedBounds, { padding: [40, 40] });
         }
-        return; // Halt right here—zero network request fired!
+        return;
     }
 
-    const features = routesPathsData.features.filter(f => f.properties.routeCode.toLowerCase() === lowerCode);
+    let features = routesPathsData.features.filter(f => f.properties.routeCode.toLowerCase() === lowerCode);
     if (features.length === 0) return;
 
-    // Loop through ALL matching direction layers (Inbound and Outbound) simultaneously
+    // ✅ SELF-HEALING FAILSAFE: Clone and reverse if only one direction exists
+    if (features.length === 1) {
+        console.warn(`⚠️ Data Deficit Detected on [${code.toUpperCase()}]: Static feed missing a directional variant. Activating coordinate mirroring failsafe...`);
+        
+        const mirroredFeature = JSON.parse(JSON.stringify(features[0])); 
+        if (mirroredFeature.geometry && mirroredFeature.geometry.coordinates) {
+            mirroredFeature.geometry.coordinates.reverse();
+        }
+        mirroredFeature.properties.shape_id += "_mirrored_fallback";
+        features.push(mirroredFeature);
+    }
+
     const routingPromises = features.map(feature => {
-        const rawCoords = feature.geometry.coordinates;
+        let rawCoords = feature.geometry.coordinates;
+
+        // ✅ PERFORMANCE FAILSAFE: Down-sample dense coordinates to avoid hitting OSRM's URL query string character limits
+        if (rawCoords.length > 120) {
+            const step = Math.ceil(rawCoords.length / 120);
+            const sampled = [];
+            for (let i = 0; i < rawCoords.length; i += step) {
+                sampled.push(rawCoords[i]);
+            }
+            if (sampled[sampled.length - 1] !== rawCoords[rawCoords.length - 1]) {
+                sampled.push(rawCoords[rawCoords.length - 1]); // Ensure last stop is retained
+            }
+            rawCoords = sampled;
+        }
+
         const coordString = rawCoords.map(pt => `${pt[0]},${pt[1]}`).join(';');
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
 
@@ -306,14 +319,11 @@ function renderSelectedRouteLine(code) {
                 }
             })
             .catch(() => {
-                // Graceful fallback to raw straight GeoJSON coords if OSRM errors out
                 return L.geoJSON(feature, { style: { color: '#2563eb', weight: 4, opacity: 0.8 } });
             });
     });
 
-    // Wait until all direction threads resolve, write to cache, and paint layout
     Promise.all(routingPromises).then(polylines => {
-        // Save the generated Leaflet layer groups to our permanent cache map tracking dictionary
         routingCache[lowerCode] = polylines;
 
         const combinedBounds = L.latLngBounds();
@@ -343,7 +353,7 @@ function syncLiveBusTracker() {
         if (checkedRadio) selectedSource = checkedRadio.value;
     }
     
-    document.getElementById('refresh-indicator').textContent = txtSyncing; // ◄ Applied config string variable
+    document.getElementById('refresh-indicator').textContent = txtSyncing; 
     const apiEndpoint = selectedSource === 'mock' ? '/api/buses?mock=true' : '/api/buses';
 
     const busIcon = L.divIcon({
@@ -368,49 +378,33 @@ function syncLiveBusTracker() {
                 ? targetBuses 
                 : targetBuses.filter(b => b.routeCode && b.routeCode.toLowerCase() === routeSelection.toLowerCase());
             
-            // --- ENVIRONMENT LOCKED DIAGNOSTIC LOG ---
             if (branchName !== 'main') {
                 try {
                     console.log(`[BAS.MY Data Lock Check] Filtered View [${routeSelection.toUpperCase()}]. Active buses found:`, filtered.length);
-                    
                     if (filtered.length > 0) {
                         const activeBus = filtered[0];
-                        console.log("[BAS.MY Data Lock Check] Properties for active vehicle:", {
-                            id: activeBus.id,
-                            vehicleId: activeBus.vehicleNumber,
-                            routeCode: activeBus.routeCode,
-                            rawTimestamp: activeBus.timestamp
-                        });
-
                         if (activeBus.timestamp) {
                             const serverDate = !isNaN(activeBus.timestamp) ? new Date(parseInt(activeBus.timestamp) * 1000) : new Date(activeBus.timestamp);
                             console.log(`[BAS.MY Data Lock Check] Server Time: ${serverDate.toLocaleTimeString()} | Your System Time: ${new Date().toLocaleTimeString()}`);
                         }
-                    } else {
-                        console.log(`[BAS.MY Data Lock Check] No active buses found on route ${routeSelection.toUpperCase()}`);
                     }
                 } catch (logErr) {
                     console.warn("Diagnostics log printout interrupted:", logErr);
                 }
             }
-            // -----------------------------------------
 
             filtered.forEach(bus => {
-                // 1. Isolate the active direction code string signature
-                // Uses explicit telemetry property or extracts from tripId string fallback (e.g., "210_1_WD_13" -> "1")
                 const dirId = bus.directionId !== undefined 
                     ? String(bus.directionId) 
                     : (bus.tripId ? bus.tripId.split('_')[1] : '0');
                 
                 const routeKey = bus.routeCode ? bus.routeCode.toLowerCase() : '';
                 
-                // 2. Query our dynamic build-time destination lookup index with global safety fallback
                 let finalDestination = bus.routeName;
                 if (typeof destinationLookup !== 'undefined' && destinationLookup[routeKey] && destinationLookup[routeKey][dirId]) {
                     finalDestination = destinationLookup[routeKey][dirId];
                 }
 
-                // 3. Paint the marker popup configuration
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
                  .bindPopup(`
                     <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
@@ -426,7 +420,7 @@ function syncLiveBusTracker() {
             document.getElementById('refresh-indicator').textContent = txtLatest + ` (${selectedSource}): ${new Date().toLocaleTimeString()}`;
         })
         .catch(() => {
-            document.getElementById('refresh-indicator').textContent = txtFailed; // ◄ Applied config string variable
+            document.getElementById('refresh-indicator').textContent = txtFailed; 
         });
 }
 
@@ -476,14 +470,9 @@ if (infoOverlay) {
 // ============================================================================
 // SYSTEM BOOTSTRAP INITIALIZATION LAYER
 // ============================================================================
-// Executes natively the exact moment the document context mounts completely
 injectDynamicCopyrightYear();
 initializeRouteSelector();
 renderFilteredBusStops('all');
 updateRouteDescriptionLabel('all', true);
-
-// Run the live telemetry fetch instantly now that all indices are bound
 syncLiveBusTracker();
-
-// Pin your background interval synchronization layer safely
 setInterval(syncLiveBusTracker, 60000);
