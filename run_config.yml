@@ -1,2 +1,3 @@
 development:
-  branch: "main"
+  branch: 'main' 
+  gtfs-status: 'normal'
