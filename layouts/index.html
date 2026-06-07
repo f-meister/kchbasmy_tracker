@@ -25,6 +25,17 @@
         </symbol>
     </svg>
 
+    <svg style="display: none;">
+        <svg id="icon-crosshair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="22" y1="12" x2="18" y2="12"></line>
+            <line x1="6" y1="12" x2="2" y2="12"></line>
+            <line x1="12" y1="6" x2="12" y2="2"></line>
+            <line x1="12" y1="22" x2="12" y2="18"></line>
+            <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
+        </svg>
+    </svg>
+
     <div class="tracker-container" id="app-shell" 
         data-branch="{{ getenv "CF_PAGES_BRANCH" }}"
         data-txt-syncing="{{ .Site.Data.strings.map_controls.syncing }}"
@@ -37,6 +48,7 @@
         data-txt-lg-interchange="{{ .Site.Data.strings.map_controls.legend_interchange }}"
         data-txt-lg-station="{{ .Site.Data.strings.map_controls.legend_station }}"
         data-txt-lg-bus="{{ .Site.Data.strings.map_controls.legend_bus }}"
+        data-txt-lg-geolocation="{{ .Site.Data.strings.map_controls.legend_geolocation }}"
         data-txt-pop-stream="{{ .Site.Data.strings.popups.bus_stream }}"
         data-txt-pop-code="{{ .Site.Data.strings.popups.bus_code }}"
         data-txt-pop-vehicle="{{ .Site.Data.strings.popups.vehicle_id }}"

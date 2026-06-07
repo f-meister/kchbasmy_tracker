@@ -18,6 +18,7 @@ map_controls:
   legend_interchange: "Interchange"
   legend_station: "Main Station"
   legend_bus: "Active Bus"
+  legend_geolocation: "Where am I?"
 
 popups:
   bus_stream: "Active Vehicle Stream"

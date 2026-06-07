@@ -13,6 +13,7 @@ const txtLgStop         = appShell?.dataset.txtLgStop         || 'Bus Stop';
 const txtLgInterchange  = appShell?.dataset.txtLgInterchange  || 'Interchange';
 const txtLgStation      = appShell?.dataset.txtLgStation      || 'Main Station';
 const txtLgBus          = appShell?.dataset.txtLgBus          || 'Active Bus';
+const txtLgGeolocation  = appShell?.dataset.txtLgGeolocation  || 'Your Location';
 const txtPopRoutes      = appShell?.dataset.txtPopRoutes      || 'Available Routes';
 const txtPopStream      = appShell?.dataset.txtPopStream      || 'Active Vehicle Stream';
 const txtPopCode        = appShell?.dataset.txtPopCode        || 'Bus Code:';
@@ -55,14 +56,7 @@ const LocationControl = L.Control.extend({
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-location-control');
         container.innerHTML = `
             <button id="location-toggle-btn" data-tracking-state="off" title="Track My Location" aria-label="Track My Location" style="width: 30px; height: 30px; background: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                <svg id="icon-crosshair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="22" y1="12" x2="18" y2="12"></line>
-                    <line x1="6" y1="12" x2="2" y2="12"></line>
-                    <line x1="12" y1="6" x2="12" y2="2"></line>
-                    <line x1="12" y1="22" x2="12" y2="18"></line>
-                    <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
-                </svg>
+                <svg class="map-svg-use" style="width: 18px; height: 18px;"><use href="#icon-crosshair"></use></svg>
             </button>
         `;
         
@@ -98,6 +92,14 @@ legend.onAdd = function () {
                 <svg class="legend-svg-use"><use href="#icon-bus"></use></svg>
             </div>
             <span>${txtLgBus}</span>
+        </div>
+        <div class="legend-item" style="border-top: 1px solid #e2e8f0; margin-top: 6px; padding-top: 6px;">
+            <div style="width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; margin-right: 6px; position: relative; padding-top: 6px;">
+                <div class="legend-geolocation">
+                    <svg class="map-svg-use" style="width: 18px; height: 18px;"><use href="#icon-crosshair"></use></svg>
+                </div>
+            </div>
+            <span style="color: #ffffff; margin-left: -6px; padding-top: 6px;">${txtLgGeolocation}</span>
         </div>
     `;
     return div;
@@ -532,9 +534,9 @@ function handleUserPositionUpdate(position) {
         window.userLocationMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(map);
         window.userAccuracyCircle = L.circle([lat, lon], {
             radius: accuracy,
-            color: '#2563eb',
+            color: '#d946ef',
             weight: 1,
-            fillColor: '#2563eb',
+            fillColor: '#d946ef',
             fillOpacity: 0.15,
             pane: 'busStopsPane'
         }).addTo(map);
