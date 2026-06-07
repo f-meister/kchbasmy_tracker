@@ -42,11 +42,35 @@ const busLayer = L.layerGroup().addTo(map);
 const pathLayer = L.layerGroup().addTo(map);
 const stopLayer = L.layerGroup().addTo(map);
 
-// ✅ FIXED: Declare tracking parameters globally on the window to ensure cross-module availability
+// Declare tracking parameters globally on the window to ensure cross-module availability
 window.geolocationWatchId = null; 
 window.userLocationMarker = null;
 window.userAccuracyCircle = null;
 window.lastCalculatedPosition = null; 
+
+// --- LEAFLET NATIVE GEOLOCATION CONTROL ELEMENT ---
+const LocationControl = L.Control.extend({
+    options: { position: 'topleft' }, 
+    onAdd: function () {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-location-control');
+        container.innerHTML = `
+            <button id="location-toggle-btn" data-tracking-state="off" title="Track My Location" aria-label="Track My Location" style="width: 30px; height: 30px; background: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <svg id="icon-crosshair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="22" y1="12" x2="18" y2="12"></line>
+                    <line x1="6" y1="12" x2="2" y2="12"></line>
+                    <line x1="12" y1="6" x2="12" y2="2"></line>
+                    <line x1="12" y1="22" x2="12" y2="18"></line>
+                    <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
+                </svg>
+            </button>
+        `;
+        
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+    }
+});
+map.addControl(new LocationControl());
 
 // --- LEAFLET MAP LEGEND LAYER ---
 const legend = L.control({ position: 'topright' });
@@ -487,7 +511,6 @@ function handleUserPositionUpdate(position) {
     const lon = position.coords.longitude;
     const accuracy = position.coords.accuracy;
 
-    // ✅ Match global window namespace bounds
     if (window.lastCalculatedPosition) {
         const deltaDistance = calculateHaversineDistance(
             window.lastCalculatedPosition.lat, window.lastCalculatedPosition.lon, 
@@ -561,7 +584,6 @@ function stopUserLocationTracking() {
         navigator.geolocation.clearWatch(window.geolocationWatchId);
         window.geolocationWatchId = null;
     }
-    // ✅ Safety check global window object bindings cleanly to prevent unhandled reference crashes
     if (window.userLocationMarker) { map.removeLayer(window.userLocationMarker); window.userLocationMarker = null; }
     if (window.userAccuracyCircle) { map.removeLayer(window.userAccuracyCircle); window.userAccuracyCircle = null; }
     window.lastCalculatedPosition = null;
@@ -572,8 +594,10 @@ function stopUserLocationTracking() {
 // SYSTEM BOOTSTRAP INITIALIZATION LAYER
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('location-toggle-btn')?.addEventListener('click', () => {
-        const btn = document.getElementById('location-toggle-btn');
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#location-toggle-btn');
+        if (!btn) return;
+        
         const currentState = btn.getAttribute('data-tracking-state');
         if (currentState === 'off') {
             startUserLocationTracking();
