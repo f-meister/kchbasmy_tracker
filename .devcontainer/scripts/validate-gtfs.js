@@ -53,7 +53,7 @@ function extractAndFlattenZip(zipName) {
   console.log(`📂 Unpacking [${zipName}] straight into tmp-gtfs/ workspace...`);
   execSync(`unzip -o "${zipPath}" -d "${tmpDir}"`);
 
-  // ✅ FIX: Search for text sheets nested deep inside the zip extract structures
+  // Search for text sheets nested deep inside the zip extract structures
   const extractedTxtFiles = findFilesByExtension(tmpDir, '.txt');
   
   extractedTxtFiles.forEach(oldPath => {
@@ -70,16 +70,20 @@ function extractAndFlattenZip(zipName) {
 function runPipeline() {
   let gtfsStatus = 'normal';
 
-  // 1. Detect configuration parameters from run_config.yml if it exists
-  if (fs.existsSync(configPath)) {
+  // 1. Check for non-mutating Environment Variable Override first, then fall back to run_config.yaml
+  if (process.env.GTFS_STATUS_OVERRIDE) {
+    gtfsStatus = process.env.GTFS_STATUS_OVERRIDE.toLowerCase().trim();
+    console.log(`📡 Initialization via Environment Variable [GTFS_STATUS_OVERRIDE: "${gtfsStatus}"]`);
+  } else if (fs.existsSync(configPath)) {
     const configContent = fs.readFileSync(configPath, 'utf-8');
     const statusMatch = configContent.match(/gtfs-status:\s*["']?([^"'\s]+)/);
     if (statusMatch && statusMatch[1]) {
       gtfsStatus = statusMatch[1].toLowerCase().trim();
     }
+    console.log(`📡 Initialization via Configuration Disk [gtfs-status: "${gtfsStatus}"]`);
+  } else {
+    console.log(`📡 Initialization default context profile loaded [gtfs-status: "${gtfsStatus}"]`);
   }
-
-  console.log(`📡 Initialization Environment Token [gtfs-status: "${gtfsStatus}"]`);
 
   // 2. Conditional Branching for Status Verification Testing
   if (gtfsStatus === 'test') {
