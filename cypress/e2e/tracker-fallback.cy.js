@@ -37,9 +37,9 @@ function bootstrapFallbackWorkspace() {
     }
   }).as('getOsrmRoute');
 
-  // 3. ✅ MATCH NATURAL BOOT: Only stub destinationLookup exactly like tracker.cy.js does!
-  // Let your flattened fallback dataset load naturally from Hugo's build target.
-  cy.visit('/', {
+  // 3. Visit the isolated compiled HTML file directly instead of the base dev server route
+  // This works identically locally and inside headless GitHub Actions CI runners.
+  cy.visit('public-test/index.html', {
     onBeforeLoad(win) {
       Object.defineProperty(win, 'destinationLookup', {
         get: () => FALLBACK_DESTINATION_LOOKUP,
@@ -53,17 +53,19 @@ function bootstrapFallbackWorkspace() {
 describe('Transit Tracker Fallback Infrastructure Assertions', () => {
 
   before(() => {
-    // 🛠️ Force setup environment into test mode to verify self-healing scripts function
-    cy.exec('echo "development:\n  branch: \'test\'\n  gtfs-status: \'test\'" > run_config.yml');
-    cy.exec('./.devcontainer/setup.sh');
-    cy.exec('hugo'); 
+    // 1. Run the setup script with the test environment flag to generate fallback static tables
+    cy.exec('GTFS_STATUS_OVERRIDE=test ./.devcontainer/setup.sh');
+    
+    // 2. Compile Hugo output directly to our temporary testing sandbox folder
+    cy.exec('hugo --destination public-test'); 
   });
 
   after(() => {
-    // 🧹 Clean up configuration layers to bring back normal operations pipeline
-    cy.exec('echo "development:\n  branch: \'main\' \n  gtfs-status: \'normal\'" > run_config.yml');
+    // 1. Re-run the normal setup script to restore normal live operational tables
     cy.exec('./.devcontainer/setup.sh');
-    cy.exec('hugo');
+    
+    // 2. Clean up our temporary testing target directory completely
+    cy.exec('rm -rf public-test');
   });
 
   beforeEach(() => {
