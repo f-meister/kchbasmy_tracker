@@ -87,12 +87,14 @@ This repository includes a pre-configured VS Code Devcontainer environment. This
 To minimize manual terminal inputs and easily swap environment parameters, use these localized workspace management scripts.
 
 1. Configure Your Runtime Target (`run_config.yml`)
-Modify the `branch` parameter to toggle environment-specific features instantly at runtime:
+Modify the `branch` parameter to toggle environment-specific features instantly at runtime. There is also a `gtfs-status` parameter to testing the case where gtfs-realtime data is empty.
 
 ```YAML
 development:
   branch: "dev"   # Shows 'Data Feed Source' selector (Live API vs Simulation)
                   # Swap to "main" to auto-lock the interface into Production mode
+  gtfs-status: "normal" # "test" for empty route data simulation (sometimes API returns empty static gtfs data...)
+                        # "normal" for live API data
 ```
 2. Full Workspace Initialization & Execution (Recommended)
 This script performs a complete clean-slate rebuild. It wipes all build caches, clears old local dataset arrays, fetches fresh spatial data points, and brings up the local proxy server:
