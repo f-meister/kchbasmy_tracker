@@ -84,6 +84,19 @@
             <span id="refresh-indicator" class="timer">{{ .Site.Data.strings.map_controls.syncing | default "Syncing positions..." }}</span>
         </div>
 
+        <div id="location-control-container" class="leaflet-bar leaflet-control">
+            <button id="location-toggle-btn" data-tracking-state="off" title="Track My Location" aria-label="Track My Location">
+                <svg id="icon-crosshair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="22" y1="12" x2="18" y2="12"></line>
+                    <line x1="6" y1="12" x2="2" y2="12"></line>
+                    <line x1="12" y1="6" x2="12" y2="2"></line>
+                    <line x1="12" y1="22" x2="12" y2="18"></line>
+                    <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
+                </svg>
+            </button>
+        </div>
+
         <div id="map"></div>
     </div>
 

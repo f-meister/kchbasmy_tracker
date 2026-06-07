@@ -42,6 +42,12 @@ const busLayer = L.layerGroup().addTo(map);
 const pathLayer = L.layerGroup().addTo(map);
 const stopLayer = L.layerGroup().addTo(map);
 
+// ✅ FIXED: Declare tracking parameters globally on the window to ensure cross-module availability
+window.geolocationWatchId = null; 
+window.userLocationMarker = null;
+window.userAccuracyCircle = null;
+window.lastCalculatedPosition = null; 
+
 // --- LEAFLET MAP LEGEND LAYER ---
 const legend = L.control({ position: 'topright' });
 
@@ -81,20 +87,20 @@ const stopRoutesIndex = {};
 
 // Initialization bootstrap routine called once global JSON objects load
 function initializeRouteSelector() {
-    if (routesPathsData && routesPathsData.features) {
+    if (window.routesPathsData && window.routesPathsData.features) {
         const selector = document.getElementById('route-selector');
+        if (!selector) return;
         
-        routesPathsData.features.forEach(f => {
+        window.routesPathsData.features.forEach(f => {
             if (f.properties && f.properties.routeCode) {
                 routeNamesLookup[f.properties.routeCode.toLowerCase()] = f.properties.routeName || "Operational Route";
             }
         });
 
-        // --- CALCULATE REVERSE INTERCHANGE MAP ON INITIALIZATION ---
-        if (routeStopsIndex) {
-            Object.keys(routeStopsIndex).forEach(routeKey => {
+        if (window.routeStopsIndex) {
+            Object.keys(window.routeStopsIndex).forEach(routeKey => {
                 const upperRoute = routeKey.toUpperCase();
-                const stopIdsArray = routeStopsIndex[routeKey] || [];
+                const stopIdsArray = window.routeStopsIndex[routeKey] || [];
                 
                 stopIdsArray.forEach(stopId => {
                     if (!stopRoutesIndex[stopId]) {
@@ -107,12 +113,11 @@ function initializeRouteSelector() {
             });
         }
 
-        // Force selector option value properties to lowercase to align with tracking layers
-        const trackingCodes = routesPathsData.features.map(f => f.properties.routeCode ? f.properties.routeCode.toLowerCase() : '').filter(Boolean);
+        const trackingCodes = window.routesPathsData.features.map(f => f.properties.routeCode ? f.properties.routeCode.toLowerCase() : '').filter(Boolean);
         [...new Set(trackingCodes)].sort().forEach(code => {
             const opt = document.createElement('option');
-            opt.value = code; // Lowercase control token (e.g. "q14")
-            opt.textContent = `${code.toUpperCase()}`; // Clean rendering text for users (e.g. "Q14")
+            opt.value = code; 
+            opt.textContent = `${code.toUpperCase()}`; 
             selector.appendChild(opt);
         });
     }
@@ -134,7 +139,8 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
 
         label.style.opacity = '0';
         setTimeout(() => {
-            if (document.getElementById('route-selector').value === 'all') {
+            const currentSelector = document.getElementById('route-selector');
+            if (currentSelector && currentSelector.value === 'all') {
                 label.classList.add('route-prompt-text');
                 label.innerHTML = txtPrompt;
                 label.style.display = 'inline-block';
@@ -178,13 +184,13 @@ function updateTimetableLink(selectedRoute) {
 
 function renderFilteredBusStops(selectedCode) {
     stopLayer.clearLayers();
-    if (!stopsData || !stopsData.features) return;
+    if (!window.stopsData || !window.stopsData.features) return;
 
-    let targetFeatures = stopsData.features;
+    let targetFeatures = window.stopsData.features;
     if (selectedCode !== 'all') {
         const lowerCode = selectedCode.toLowerCase();
         
-        targetFeatures = stopsData.features.filter(f => {
+        targetFeatures = window.stopsData.features.filter(f => {
             const stopId = f.properties.stop_id;
             const passingRoutes = stopRoutesIndex[stopId] || [];
             return passingRoutes.some(r => r.toLowerCase() === lowerCode);
@@ -252,13 +258,11 @@ function renderFilteredBusStops(selectedCode) {
     }).addTo(stopLayer);
 }
 
-// Global memory store cache layer to protect the public OSRM API from rate-limiting
 const routingCache = {};
 
-// --- OPTIMIZED MULTI-DIRECTIONAL SHAPE ROUTING PATHS ENGINE WITH CACHING ---
 function renderSelectedRouteLine(code) {
     pathLayer.clearLayers();
-    if (code === 'all' || !routesPathsData) return;
+    if (code === 'all' || !window.routesPathsData) return;
 
     const lowerCode = code.toLowerCase();
 
@@ -273,10 +277,9 @@ function renderSelectedRouteLine(code) {
         return;
     }
 
-    let features = routesPathsData.features.filter(f => f.properties.routeCode.toLowerCase() === lowerCode);
+    let features = window.routesPathsData.features.filter(f => f.properties.routeCode.toLowerCase() === lowerCode);
     if (features.length === 0) return;
 
-    // ✅ SELF-HEALING FAILSAFE: Clone and reverse if only one direction exists
     if (features.length === 1) {
         console.warn(`⚠️ Data Deficit Detected on [${code.toUpperCase()}]: Static feed missing a directional variant. Activating coordinate mirroring failsafe...`);
         
@@ -291,7 +294,6 @@ function renderSelectedRouteLine(code) {
     const routingPromises = features.map(feature => {
         let rawCoords = feature.geometry.coordinates;
 
-        // ✅ PERFORMANCE FAILSAFE: Down-sample dense coordinates to avoid hitting OSRM's URL query string character limits
         if (rawCoords.length > 120) {
             const step = Math.ceil(rawCoords.length / 120);
             const sampled = [];
@@ -299,7 +301,7 @@ function renderSelectedRouteLine(code) {
                 sampled.push(rawCoords[i]);
             }
             if (sampled[sampled.length - 1] !== rawCoords[rawCoords.length - 1]) {
-                sampled.push(rawCoords[rawCoords.length - 1]); // Ensure last stop is retained
+                sampled.push(rawCoords[rawCoords.length - 1]); 
             }
             rawCoords = sampled;
         }
@@ -345,7 +347,10 @@ function injectDynamicCopyrightYear() {
 }
 
 function syncLiveBusTracker() {
-    const routeSelection = document.getElementById('route-selector').value;
+    const routeSelectorEl = document.getElementById('route-selector');
+    if (!routeSelectorEl) return;
+    
+    const routeSelection = routeSelectorEl.value;
     
     let selectedSource = 'live';
     if (branchName !== 'main') {
@@ -353,7 +358,9 @@ function syncLiveBusTracker() {
         if (checkedRadio) selectedSource = checkedRadio.value;
     }
     
-    document.getElementById('refresh-indicator').textContent = txtSyncing; 
+    const refreshInd = document.getElementById('refresh-indicator');
+    if (refreshInd) refreshInd.textContent = txtSyncing; 
+    
     const apiEndpoint = selectedSource === 'mock' ? '/api/buses?mock=true' : '/api/buses';
 
     const busIcon = L.divIcon({
@@ -377,21 +384,6 @@ function syncLiveBusTracker() {
             const filtered = routeSelection === 'all' 
                 ? targetBuses 
                 : targetBuses.filter(b => b.routeCode && b.routeCode.toLowerCase() === routeSelection.toLowerCase());
-            
-            if (branchName !== 'main') {
-                try {
-                    console.log(`[BAS.MY Data Lock Check] Filtered View [${routeSelection.toUpperCase()}]. Active buses found:`, filtered.length);
-                    if (filtered.length > 0) {
-                        const activeBus = filtered[0];
-                        if (activeBus.timestamp) {
-                            const serverDate = !isNaN(activeBus.timestamp) ? new Date(parseInt(activeBus.timestamp) * 1000) : new Date(activeBus.timestamp);
-                            console.log(`[BAS.MY Data Lock Check] Server Time: ${serverDate.toLocaleTimeString()} | Your System Time: ${new Date().toLocaleTimeString()}`);
-                        }
-                    }
-                } catch (logErr) {
-                    console.warn("Diagnostics log printout interrupted:", logErr);
-                }
-            }
 
             filtered.forEach(bus => {
                 const dirId = bus.directionId !== undefined 
@@ -417,15 +409,15 @@ function syncLiveBusTracker() {
                  `, { maxWidth: 250 })
                  .addTo(busLayer);
             });
-            document.getElementById('refresh-indicator').textContent = txtLatest + ` (${selectedSource}): ${new Date().toLocaleTimeString()}`;
+            if (refreshInd) refreshInd.textContent = txtLatest + ` (${selectedSource}): ${new Date().toLocaleTimeString()}`;
         })
         .catch(() => {
-            document.getElementById('refresh-indicator').textContent = txtFailed; 
+            if (refreshInd) refreshInd.textContent = txtFailed; 
         });
 }
 
 // --- EVENT HANDLERS & REGISTRATION INTERFACES ---
-document.getElementById('route-selector').addEventListener('change', (e) => {
+document.getElementById('route-selector')?.addEventListener('change', (e) => {
     const code = e.target.value;
     updateRouteDescriptionLabel(code); 
     updateTimetableLink(code);
@@ -468,11 +460,140 @@ if (infoOverlay) {
 }
 
 // ============================================================================
+// 📍 CLIENT GEOLOCATION TRACKING SERVICES MODULE
+// ============================================================================
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    
+    const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const sqrtA = Math.sqrt(a);
+    const sqrtB = Math.sqrt(1 - a);
+    
+    const c = 2 * Math.atan2(sqrtA, sqrtB);
+    return R * c; 
+}
+
+function handleUserPositionUpdate(position) {
+    const btn = document.getElementById('location-toggle-btn');
+    if (!btn || btn.getAttribute('data-tracking-state') === 'off') return;
+
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    const accuracy = position.coords.accuracy;
+
+    // ✅ Match global window namespace bounds
+    if (window.lastCalculatedPosition) {
+        const deltaDistance = calculateHaversineDistance(
+            window.lastCalculatedPosition.lat, window.lastCalculatedPosition.lon, 
+            lat, lon
+        );
+        if (deltaDistance < 10) return; 
+    }
+
+    window.lastCalculatedPosition = { lat, lon };
+
+    if (!window.userLocationMarker) {
+        const pulseIcon = L.divIcon({
+            html: `<div class="user-pulse-core"></div><div class="user-pulse-ring"></div>`,
+            className: 'user-location-marker',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+
+        window.userLocationMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(map);
+        window.userAccuracyCircle = L.circle([lat, lon], {
+            radius: accuracy,
+            color: '#2563eb',
+            weight: 1,
+            fillColor: '#2563eb',
+            fillOpacity: 0.15,
+            pane: 'busStopsPane'
+        }).addTo(map);
+
+        map.setView([lat, lon], 15);
+        btn.setAttribute('data-tracking-state', 'locked');
+    } else {
+        window.userLocationMarker.setLatLng([lat, lon]);
+        window.userAccuracyCircle.setLatLng([lat, lon]);
+        window.userAccuracyCircle.setRadius(accuracy);
+
+        if (btn.getAttribute('data-tracking-state') === 'locked') {
+            map.panTo([lat, lon]);
+        }
+    }
+}
+
+function handleUserPositionError(err) {
+    console.warn(`[GPS Engine Error ${err.code}]: ${err.message}`);
+    stopUserLocationTracking();
+    const indicator = document.getElementById('refresh-indicator');
+    if (indicator) indicator.textContent = 'Location access denied or timed out.';
+}
+
+function startUserLocationTracking() {
+    const btn = document.getElementById('location-toggle-btn');
+    if (!btn || window.geolocationWatchId !== null) return;
+
+    btn.setAttribute('data-tracking-state', 'seeking');
+
+    if (!navigator.geolocation) {
+        console.error("Geolocation API isn't supported by this browser.");
+        btn.setAttribute('data-tracking-state', 'off');
+        return;
+    }
+
+    window.geolocationWatchId = navigator.geolocation.watchPosition(
+        handleUserPositionUpdate,
+        handleUserPositionError,
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+}
+
+function stopUserLocationTracking() {
+    const btn = document.getElementById('location-toggle-btn');
+    if (window.geolocationWatchId !== null) {
+        navigator.geolocation.clearWatch(window.geolocationWatchId);
+        window.geolocationWatchId = null;
+    }
+    // ✅ Safety check global window object bindings cleanly to prevent unhandled reference crashes
+    if (window.userLocationMarker) { map.removeLayer(window.userLocationMarker); window.userLocationMarker = null; }
+    if (window.userAccuracyCircle) { map.removeLayer(window.userAccuracyCircle); window.userAccuracyCircle = null; }
+    window.lastCalculatedPosition = null;
+    if (btn) btn.setAttribute('data-tracking-state', 'off');
+}
+
+// ============================================================================
 // SYSTEM BOOTSTRAP INITIALIZATION LAYER
 // ============================================================================
-injectDynamicCopyrightYear();
-initializeRouteSelector();
-renderFilteredBusStops('all');
-updateRouteDescriptionLabel('all', true);
-syncLiveBusTracker();
-setInterval(syncLiveBusTracker, 60000);
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('location-toggle-btn')?.addEventListener('click', () => {
+        const btn = document.getElementById('location-toggle-btn');
+        const currentState = btn.getAttribute('data-tracking-state');
+        if (currentState === 'off') {
+            startUserLocationTracking();
+        } else {
+            stopUserLocationTracking();
+        }
+    });
+
+    map.on('dragstart', () => {
+        const btn = document.getElementById('location-toggle-btn');
+        if (btn && btn.getAttribute('data-tracking-state') === 'locked') {
+            btn.setAttribute('data-tracking-state', 'seeking');
+        }
+    });
+
+    injectDynamicCopyrightYear();
+    initializeRouteSelector();
+    renderFilteredBusStops('all');
+    updateRouteDescriptionLabel('all', true);
+    syncLiveBusTracker();
+    
+    setInterval(syncLiveBusTracker, 60000);
+});

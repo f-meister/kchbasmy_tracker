@@ -515,3 +515,91 @@ h1 {
     letter-spacing: 0.02em;
     user-select: none;
 }
+
+/* --- FLOATING LOCATION STYLES --- */
+#location-control-container {
+    position: absolute;
+    bottom: 24px;
+    right: 12px;
+    z-index: 1000; /* Floats securely over Leaflet panes */
+    border: none;
+    background: none;
+}
+
+#location-toggle-btn {
+    width: 44px;
+    height: 44px;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+#location-toggle-btn:hover {
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+/* --- STATE MUTATION COLORS --- */
+#location-toggle-btn[data-tracking-state="seeking"] {
+    color: #f97316; /* Muted orange indicating lookup loop */
+}
+#location-toggle-btn[data-tracking-state="seeking"] svg {
+    animation: location-spin 2s linear infinite;
+}
+
+#location-toggle-btn[data-tracking-state="locked"] {
+    color: #2563eb; /* Brand active blue locked state */
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+/* --- LIVE COMMUTER MARKER PIN --- */
+.user-location-marker {
+    background: none;
+    border: none;
+}
+
+.user-pulse-core {
+    width: 14px;
+    height: 14px;
+    background-color: #2563eb;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.user-pulse-ring {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #2563eb;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: user-marker-pulse 2s ease-out infinite;
+    opacity: 0;
+    z-index: 1;
+}
+
+/* --- ANIMATION LAYERS --- */
+@keyframes location-spin {
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes user-marker-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.5; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
