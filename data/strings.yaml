@@ -18,6 +18,7 @@ map_controls:
   legend_interchange: "Interchange"
   legend_station: "Main Station"
   legend_bus: "Active Bus"
+  legend_geolocation: "Where am I?"
 
 popups:
   bus_stream: "Active Vehicle Stream"
@@ -29,12 +30,12 @@ popups:
 
 modal_about:
   header: "🇲🇾 About the Tracker"
-  tagline: "Check routes, stops, interchanges, and transit maps for BAS.MY in Kuching, Malaysia!"
+  tagline: "Check location, routes, stops, interchanges, and transit maps for BAS.MY in Kuching, Malaysia!"
   features_title: "Latest Updates"
   features_list:
+    - "08/06/2026: add geolocation marker, fix more API data problems"
     - "06/06/2026: add Main Station icons + route destination popups, fix weekend bus routes"
     - "05/06/2026: refactor code for better maintainability"
-    - "30/05/2026: remove ghost bus + fixed missing bus icon (API data changes)"
   contact_title: "Get in Touch"
   btn_github: "View GitHub Project"
   btn_contact: "Feedback & Suggestions"
