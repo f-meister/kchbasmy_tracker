@@ -33,7 +33,7 @@ modal_about:
   tagline: "Check location, routes, stops, interchanges, and transit maps for BAS.MY in Kuching, Malaysia!"
   features_title: "Latest Updates"
   features_list:
-    - "08/06/2026: add geolocation marker + ko-fi link, fix more API data problems"
+    - "08/06/2026: add geolocation marker + ko-fi link, fix more API data problems + warnings"
     - "06/06/2026: add Main Station icons + route destination popups, fix weekend bus routes"
     - "05/06/2026: refactor code for better maintainability"
   contact_title: "Get in Touch"
