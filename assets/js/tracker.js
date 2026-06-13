@@ -30,7 +30,12 @@ if (branchName === 'main') {
 }
 
 // 1. Core Map Initializations
-const map = L.map('map').setView([1.5574, 110.3538], 12);
+const map = L.map('map', {
+    fullscreenControl: true,
+    fullscreenControlOptions: {
+        position: 'topleft'
+    }
+}).setView([1.5574, 110.3538], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
     attribution: '© OpenStreetMap contributors' 
 }).addTo(map);

@@ -611,3 +611,16 @@ h1 {
     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.5; }
     100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
+
+/* Prevent app-shell layout headers from clipping over the blown-up map layer */
+.leaflet-container:-webkit-full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999;
+}
+
+.leaflet-container:fullscreen {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999;
+}
