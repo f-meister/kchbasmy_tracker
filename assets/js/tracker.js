@@ -656,13 +656,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Build out the secondary context viewer map instance
                 timetableMapInstance = L.map('timetable-image-viewer', {
-                    minZoom: -2,
+                    minZoom: -1,
                     maxZoom: 2,
                     center: [0, 0],
                     zoom: 0,
                     crs: L.CRS.Simple, // Crucial: sets coordinate math to simple pixel grids
                     zoomControl: true,
-                    attributionControl: false
+                    attributionControl: false,
+                    fadeAnimation: true,
+                    zoomAnimation: true
                 });
 
                 // Unproject layout coordinates to maps bounds points
@@ -675,7 +677,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Restrict panning boundaries so users can't scroll the image off the screen completely
                 timetableMapInstance.setMaxBounds(bounds);
-                timetableMapInstance.fitBounds(bounds);
+                timetableMapInstance.fitBounds(bounds, {animate: false});
+
+                setTimeout(() => {
+                    if (timetableMapInstance) {
+                        timetableMapInstance.options.zoomAnimation = true;
+                        timetableMapInstance.options.fadeAnimation = true;
+                    }
+                }, 50);
             };
         });
     }
