@@ -624,6 +624,97 @@ document.addEventListener('DOMContentLoaded', () => {
         map.invalidateSize({ animate: true });
     });
 
+    // TIMETABLE MODAL VIEWER INITIALIZATION
+    let timetableMapInstance = null;
+    const timetableLink = document.getElementById('route-timetable-link');
+
+    if (timetableLink) {
+        timetableLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Read whatever active image path your route selector injected into the link element
+            const imageUrl = this.getAttribute('href');
+
+            const modalOverlay = document.getElementById('timetable-modal-overlay');
+            const currentRouteText = document.getElementById('route-description-text').innerText || "Transit Map";
+            
+            // Sync up the text header inside the modal card to look clean
+            document.getElementById('timetable-modal-title').innerText = currentRouteText;
+            modalOverlay.style.display = 'block';
+
+            // Instantiating the flat image layout container asynchronously 
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = function() {
+                const w = this.width;
+                const h = this.height;
+
+                // Evict the old map interface layout cleanly from memory if switching routes
+                if (timetableMapInstance) {
+                    timetableMapInstance.remove();
+                }
+
+                // Build out the secondary context viewer map instance
+                timetableMapInstance = L.map('timetable-image-viewer', {
+                    minZoom: -1,
+                    maxZoom: 2,
+                    center: [0, 0],
+                    zoom: 0,
+                    crs: L.CRS.Simple, // Crucial: sets coordinate math to simple pixel grids
+                    zoomControl: true,
+                    attributionControl: false,
+                    fadeAnimation: true,
+                    zoomAnimation: true
+                });
+
+                // Unproject layout coordinates to maps bounds points
+                const southWest = timetableMapInstance.unproject([0, h], timetableMapInstance.getMaxZoom());
+                const northEast = timetableMapInstance.unproject([w, 0], timetableMapInstance.getMaxZoom());
+                const bounds = new L.LatLngBounds(southWest, northEast);
+
+                // Mount the active image layer asset
+                L.imageOverlay(imageUrl, bounds).addTo(timetableMapInstance);
+
+                // Restrict panning boundaries so users can't scroll the image off the screen completely
+                timetableMapInstance.setMaxBounds(bounds);
+                timetableMapInstance.fitBounds(bounds, {animate: false});
+
+                setTimeout(() => {
+                    if (timetableMapInstance) {
+                        timetableMapInstance.options.zoomAnimation = true;
+                        timetableMapInstance.options.fadeAnimation = true;
+                    }
+                }, 50);
+            };
+        });
+    }
+
+    // Modal Teardown Trigger Hook (X Button)
+    const modalCloseBtn = document.getElementById('timetable-modal-close');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', () => {
+            document.getElementById('timetable-modal-overlay').style.display = 'none';
+            if (timetableMapInstance) {
+                timetableMapInstance.remove();
+                timetableMapInstance = null;
+            }
+        });
+    }
+
+    // Backdrop Click Teardown Trigger Hook (Clicking the dark area outside the map card)
+    const modalOverlayBtn = document.getElementById('timetable-modal-overlay');
+    if (modalOverlayBtn) {
+        modalOverlayBtn.addEventListener('click', (e) => {
+            if (e.target.id === 'timetable-modal-overlay') {
+                modalOverlayBtn.style.display = 'none';
+                if (timetableMapInstance) {
+                    timetableMapInstance.remove();
+                    timetableMapInstance = null;
+                }
+            }
+        });
+    }
+
     injectDynamicCopyrightYear();
     initializeRouteSelector();
     renderFilteredBusStops('all');
