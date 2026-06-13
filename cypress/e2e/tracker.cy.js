@@ -167,6 +167,38 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('contain.text', 'Active Bus');
   });
 
+  it('should successfully toggle the interactive transit map modal and initialize the image canvas', () => {
+    // 1. Target route selector dropdown list to switch off the 'all' state context
+    cy.get('#route-selector', { timeout: 10000 }).select('q01');
+    
+    // 2. Confirm the modal container is hidden initially by default design
+    cy.get('#timetable-modal-overlay').should('not.be.visible');
+
+    // 3. Click the interactive transit timetable link anchor element
+    cy.get('#route-timetable-link').should('be.visible').click();
+
+    // 4. Assert the overlay backdrop fades into view successfully
+    cy.get('#timetable-modal-overlay').should('be.visible');
+
+    // 5. Verify the secondary Leaflet instance successfully mounted inside the container frame
+    cy.get('#timetable-image-viewer', { timeout: 10000 })
+      .should('be.visible')
+      .and('have.class', 'leaflet-container');
+
+    // 6. Assert the inner image overlay layer resource was appended to the DOM map pane layout registry
+    cy.get('#timetable-image-viewer')
+      .find('.leaflet-image-layer')
+      .should('be.visible')
+      .and('have.attr', 'src')
+      .should('not.be.empty');
+
+    // 7. Click the 'X' button container block to trigger the system teardown handler
+    cy.get('#timetable-modal-close').click();
+
+    // 8. Confirm the interface layer yields clean garbage collection by dropping visibility
+    cy.get('#timetable-modal-overlay').should('not.be.visible');
+  });
+
 });
 
 // ============================================================================
