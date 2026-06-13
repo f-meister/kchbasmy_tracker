@@ -91,6 +91,13 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('have.class', 'leaflet-container');
   });
 
+  it('should verify the native fullscreen control button is rendered in the map control column', () => {
+    cy.get('.leaflet-control-fullscreen', { timeout: 10000 })
+      .should('be.visible')
+      .find('a')
+      .should('have.attr', 'title', 'View Fullscreen');
+  });
+
   it('should verify Hugo attributes are bound properly on the app shell framework', () => {
     cy.get('#app-shell').should('have.attr', 'data-txt-syncing').and('not.be.empty');
     cy.get('#app-shell').should('have.attr', 'data-txt-failed').and('not.be.empty');
