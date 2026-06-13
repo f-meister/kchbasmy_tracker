@@ -620,6 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    map.on('fullscreenchange', () => {
+        map.invalidateSize({ animate: true });
+    });
+
     injectDynamicCopyrightYear();
     initializeRouteSelector();
     renderFilteredBusStops('all');
