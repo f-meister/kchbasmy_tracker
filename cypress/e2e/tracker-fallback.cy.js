@@ -85,6 +85,13 @@ describe('Transit Tracker Fallback Infrastructure Assertions', () => {
     cy.get('#route-selector').find('option[value="q01"]').should('exist');
   });
 
+  it('should verify the fullscreen plugin control layer initializes correctly under fallback conditions', () => {
+    cy.get('.leaflet-control-fullscreen')
+      .should('be.visible')
+      .find('a')
+      .should('have.attr', 'title', 'View Fullscreen');
+  });
+
   it('should cleanly render fallback transit stop markers onto the Leaflet canvas map grid', () => {
     cy.get('#app-shell').should('be.visible');
     cy.get('#map', { timeout: 10000 }).should('be.visible').and('have.class', 'leaflet-container');
