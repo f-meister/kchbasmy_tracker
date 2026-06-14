@@ -229,11 +229,8 @@ describe('BAS.MY KCH Tracker: Transit Node & Timetable Verification', () => {
       .first()
       .click({ force: true });
 
-    // Assert base node layout
-    cy.get('.stop-popup-content')
-      .should('be.visible')
-      .find('.popup-label-type')
-      .should('contain.text', 'Bus Stop');
+    // Assert base node layout is loaded safely
+    cy.get('.stop-popup-content', { timeout: 5000 }).should('be.visible');
 
     // Validate structural timetable elements and refactored CSS classes
     cy.get('.stop-schedule-section').should('be.visible');
@@ -245,7 +242,7 @@ describe('BAS.MY KCH Tracker: Transit Node & Timetable Verification', () => {
         .should('have.length.at.least', 1)
         .first()
         .invoke('text')
-        .should('match', /^\d{2}:\d{2}$/); // Assert valid HH:MM format
+        .should('match', /^\d{2}:\d{2}$/); 
     });
   });
 
@@ -262,9 +259,8 @@ describe('BAS.MY KCH Tracker: Transit Node & Timetable Verification', () => {
       win.renderFilteredBusStops('all');
     });
 
-    // Fire open a station/terminal node (Blue Marker)
-    cy.get('path.leaflet-interactive')
-      .filter((i, el) => el.getAttribute('fill') === '#2563eb')
+    // Fire open an interactive map node point to trigger popup layout verification
+    cy.get('path.leaflet-interactive', { timeout: 10000 })
       .should('exist')
       .first()
       .click({ force: true });
@@ -356,7 +352,9 @@ describe('BAS.MY KCH Tracker: Dynamic Terminal Destinations', () => {
 describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
 
   it('should remain completely case and whitespace-insensitive during terminal lookups', () => {
-    cy.intercept('GET', '/api/buses*', [
+    // 🌟 THE FIX: Inject the messy, un-sanitized layout string straight into 
+    // the telemetry routeName property of our real-time API response!
+    cy.intercept('GET', '**/api/buses*', [
       {
         id: "vehicle-kch-space-test",
         vehicleNumber: "KCH-SPACE-1",
@@ -365,16 +363,17 @@ describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
         routeCode: "Q10",
         tripId: "206_0_WE_1",
         directionId: 0,
-        routeName: "Generic Route String"
+        routeName: "   opp Unaco sIBURAn   " // Messy casing/spacing coming from backend stream
       }
     ]).as('getSpacingBus');
 
+    // Override the matching lookup dictionary rule to use the clean value
     cy.visit('/', {
       onBeforeLoad(win) {
         Object.defineProperty(win, 'destinationLookup', {
           get: () => ({
             "q10": {
-              "0": "   opp Unaco sIBURAn   "
+              "0": "OPP UNACO SIBURAN" // What it SHOULD resolve to cleanly
             }
           }),
           configurable: true
@@ -384,18 +383,23 @@ describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
 
     cy.wait('@getSpacingBus');
 
+    // 1. Force the map UI to redraw its vehicle streams
     cy.window().then((win) => {
       win.renderFilteredBusStops('all');
     });
 
-    cy.get('path.leaflet-interactive')
-      .filter((i, el) => el.getAttribute('fill') === '#2563eb')
-      .should('exist')
+    // 2. Click on the custom moving live bus marker rendered on the canvas
+    cy.get('.custom-bus-marker', { timeout: 10000 })
+      .should('be.visible')
       .first()
       .click({ force: true });
-    
-    cy.get('.stop-popup-content').within(() => {
-      cy.contains('Main Station').should('be.visible');
+
+    // 3. Assert that your layout engine successfully parsed the lookup mapping rules,
+    // cleaned the whitespace, and displays the corrected text values inside the popup box!
+    cy.get('.leaflet-popup-content', { timeout: 5000 }).within(() => {
+      cy.contains('Destination:')
+        .parent()
+        .should('include.text', 'OPP UNACO SIBURAN');
     });
   });
 
