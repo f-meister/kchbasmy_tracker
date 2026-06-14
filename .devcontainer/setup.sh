@@ -7,7 +7,8 @@ node .devcontainer/scripts/validate-gtfs.js
 
 if [ -f ".devcontainer/scripts/parse-shapes.js" ] && \
    [ -f ".devcontainer/scripts/parse-destinations.js" ] && \
-   [ -f ".devcontainer/scripts/parse-stop-times.js" ]; then
+   [ -f ".devcontainer/scripts/parse-stop-times.js" ] && \
+   [ -f ".devcontainer/scripts/parse-trip-routes.js" ]; then
     
     echo "⚙️ Compiling relational GeoJSON maps..."
     node .devcontainer/scripts/parse-shapes.js
@@ -17,6 +18,9 @@ if [ -f ".devcontainer/scripts/parse-shapes.js" ] && \
 
     echo "⚙️ Compiling timetable lookups..."
     node .devcontainer/scripts/parse-stop-times.js
+
+    echo "⚙️ Compiling dynamic trip-to-route interlining index..."
+    node .devcontainer/scripts/parse-trip-routes.js
     
     echo "🧹 Cleansing operational workspace..."
     rm -rf ./tmp-gtfs
