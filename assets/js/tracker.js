@@ -314,10 +314,7 @@ function renderFilteredBusStops(selectedCode) {
                             // SECOND GATE: Use the precision lookup map to verify that this 
                             // specific trip prefix is dedicated strictly to the selected route selection
                             const exactRouteMatch = window.prefixToRouteLookup[prefix];
-                            if (exactRouteMatch && exactRouteMatch !== lowerCode) {
-                                console.log(`[Gate 2] Stripping out trip ${tripId} from route view: ${selectedCode}`);
-                                return;
-                            }
+                            if (exactRouteMatch && exactRouteMatch !== lowerCode) return;
                         }
 
                         allStopTimes.push(stopTimesMap[stopId]);
