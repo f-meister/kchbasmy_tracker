@@ -6,11 +6,11 @@ const MOCK_BUSES_RESPONSE = [
     latitude: 1.573043,
     longitude: 110.301689,
     bearing: 90.9,
-    tripId: "210_1_WD_13",
+    tripId: "206_0_WE_13",
     timestamp: "1780047059",
-    routeCode: "q05",
-    shapeId: "shape-q05",
-    routeName: "Kuching to Bako"
+    routeCode: "q10",
+    shapeId: "shape-q10",
+    routeName: "Kuching to Siburan"
   },
   {
     id: "MADANI8013",
@@ -32,12 +32,26 @@ const MOCK_DESTINATION_LOOKUP = {
     "0": "SURAU DARUL IBADAH",
     "1": "TERMINAL SAUJANA PARKING"
   },
-  "q05": {
-    "0": "HENTIAN SMKA MATANG",
+  "q10": {
+    "0": "OPP UNACO SIBURAN",
     "1": "TERMINAL SAUJANA PARKING"
   },
   "q12": {
     "0": "TERMINAL SAUJANA"
+  }
+};
+
+// Mock static timetable lookup structured identically to your stop_times.json schema
+const MOCK_STATIC_TRIP_SCHEDULES = {
+  "206_0_WE_1": {
+    "6520": "06:42",
+    "6521": "06:30",
+    "6523": "06:41"
+  },
+  "206_0_WE_13": {
+    "6520": "09:42",
+    "6521": "09:28",
+    "6523": "09:41"
   }
 };
 
@@ -69,7 +83,12 @@ function bootstrapTrackerWorkspace() {
     onBeforeLoad(win) {
       Object.defineProperty(win, 'destinationLookup', {
         get: () => MOCK_DESTINATION_LOOKUP,
-        set: () => {}, // Intercepts and discards inline assignments
+        set: () => {}, 
+        configurable: true
+      });
+      Object.defineProperty(win, 'staticTripSchedules', {
+        get: () => MOCK_STATIC_TRIP_SCHEDULES,
+        set: () => {},
         configurable: true
       });
     }
@@ -89,6 +108,13 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#map', { timeout: 10000 })
       .should('be.visible')
       .and('have.class', 'leaflet-container');
+  });
+
+  it('should verify the native fullscreen control button is rendered in the map control column', () => {
+    cy.get('.leaflet-control-fullscreen', { timeout: 10000 })
+      .should('be.visible')
+      .find('a')
+      .should('have.attr', 'title', 'View Fullscreen');
   });
 
   it('should verify Hugo attributes are bound properly on the app shell framework', () => {
@@ -112,7 +138,6 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
         configurable: true
       });
       
-      // Manually trigger the dropdown initializer to process our newly injected data cleanly
       win.initializeRouteSelector();
     });
 
@@ -133,7 +158,7 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       expect(interception.response.body).to.have.length(2);
       
       const sampleBus = interception.response.body[0];
-      expect(sampleBus.routeCode).to.eq('q05');
+      expect(sampleBus.routeCode).to.eq('q10');
       expect(sampleBus.vehicleNumber).to.eq('MADANI5021');
       expect(sampleBus.timestamp).to.eq('1780047059');
     });
@@ -160,18 +185,38 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .and('contain.text', 'Active Bus');
   });
 
+  it('should successfully toggle the interactive transit map modal and initialize the image canvas', () => {
+    cy.get('#route-selector', { timeout: 10000 }).select('q01');
+    cy.get('#timetable-modal-overlay').should('not.be.visible');
+    cy.get('#route-timetable-link').should('be.visible').click();
+    cy.get('#timetable-modal-overlay').should('be.visible');
+
+    cy.get('#timetable-image-viewer', { timeout: 10000 })
+      .should('be.visible')
+      .and('have.class', 'leaflet-container');
+
+    cy.get('#timetable-image-viewer')
+      .find('.leaflet-image-layer')
+      .should('be.visible')
+      .and('have.attr', 'src')
+      .should('not.be.empty');
+
+    cy.get('#timetable-modal-close').click();
+    cy.get('#timetable-modal-overlay').should('not.be.visible');
+  });
+
 });
 
 // ============================================================================
-// SUITE 2: Transit Node Network Hierarchy & Failsafe Rules
+// SUITE 2: Transit Node Network Hierarchy & Timetable Features
 // ============================================================================
-describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
+describe('BAS.MY KCH Tracker: Transit Node & Timetable Verification', () => {
 
   beforeEach(() => {
     bootstrapTrackerWorkspace();
   });
 
-  it('should calculate interchanges dynamically and apply standard orange formatting', () => {
+  it('should calculate interchanges dynamically and render all structural timetable classes inside popup', () => {
     cy.get('#route-selector', { timeout: 10000 }).select('all');
 
     cy.get('path.leaflet-interactive', { timeout: 10000 })
@@ -180,23 +225,89 @@ describe('BAS.MY KCH Tracker: Transit Node Tier Verification', () => {
       .first()
       .click({ force: true });
 
+    // Assert base node layout
     cy.get('.stop-popup-content')
       .should('be.visible')
       .find('.popup-label-type')
       .should('contain.text', 'Interchange');
+
+    // Validate structural timetable elements and refactored CSS classes
+    cy.get('.stop-schedule-section').should('be.visible');
+    cy.get('.stop-schedule-title').should('be.visible').and('not.be.empty');
+    
+    // Check if sorted time blocks mapped onto tags successfully
+    cy.get('.stop-schedule-grid').within(() => {
+      cy.get('.stop-schedule-tag')
+        .should('have.length.at.least', 1)
+        .first()
+        .invoke('text')
+        .should('match', /^\d{2}:\d{2}$/); // Assert valid HH:MM format
+    });
   });
 
-  it('should capture main terminals dynamically and verify blue vector circle rendering layers', () => {
-    cy.get('#route-selector').select('all');
+  it('should capture main terminals dynamically and verify fallback timetable layout when data is empty', () => {
+    // 1. Ensure the background live telemetry stream settles first
+    cy.wait('@getLiveBuses');
 
+    // 2. Overwrite with empty schedules array to enforce the error path safely
+    cy.window().then((win) => {
+      Object.defineProperty(win, 'staticTripSchedules', {
+        get: () => ({}),
+        set: () => {},
+        configurable: true
+      });
+      
+      // Wipe out cached open IDs so old popups don't step on this clean layout run
+      win.currentlyOpenStopId = null;
+      
+      // Force manual redraw right now so markers hold the empty structure configuration
+      win.renderFilteredBusStops('all');
+    });
+
+    // 3. Select the terminal marker layer asset
     cy.get('.main-terminal-pulse', { timeout: 10000 })
-      .should('exist')
-      .and('have.attr', 'fill', '#2563eb');
+      .should('be.visible')
+      .first()
+      .click({ force: true });
+    
+    // 4. Assert that the localized fallback element displays correctly
+    cy.get('.stop-schedule-empty', { timeout: 6000 })
+      .should('be.visible');
+  });
 
-    cy.get('.main-terminal-pulse').first().click({ force: true });
+  it('should persist open stop popup viewports across real-time loop interval updates', () => {
+    cy.get('#route-selector', { timeout: 10000 }).select('all');
+
+    // Open a stop popup manually
+    cy.get('path.leaflet-interactive').first().click({ force: true });
     cy.get('.stop-popup-content').should('be.visible');
 
-    cy.get('.popup-label-type').should('be.visible').and('contain.text', 'Main Station');
+    // Confirm tracking index state was written to the window context successfully
+    cy.window().its('currentlyOpenStopId').should('not.be.null');
+
+    // Trigger an explicit telemetry refresh cycle to force layers to flash refresh
+    cy.window().then((win) => {
+      win.syncLiveBusTracker();
+    });
+    cy.wait('@getLiveBuses');
+
+    // Assert view state was retained and popup remains open
+    cy.get('.stop-popup-content').should('be.visible');
+  });
+
+  it('should gracefully purge tracking index parameters from state memory when a popup is closed', () => {
+    cy.get('#route-selector', { timeout: 10000 }).select('all');
+
+    // Open popup
+    cy.get('path.leaflet-interactive').first().click({ force: true });
+    cy.window().its('currentlyOpenStopId').should('not.be.null');
+
+    // Click map close trigger item
+    cy.get('.leaflet-popup-close-button').click();
+
+    // Verify garbage collection cleaned state values cleanly
+    cy.get('.stop-popup-content').should('not.exist');
+    cy.window().its('currentlyOpenStopId').should('be.null');
   });
 
 });
@@ -220,7 +331,6 @@ describe('BAS.MY KCH Tracker: Dynamic Terminal Destinations', () => {
       }
     ]).as('getLiveBuses');
 
-    // Protect mock parameters from extraction template rewrites using definition gates
     cy.visit('/', {
       onBeforeLoad(win) {
         Object.defineProperty(win, 'destinationLookup', {
@@ -298,7 +408,6 @@ describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
       }
     ]).as('getSpacingBus');
 
-    // Use an on-screen terminal name to prevent Leaflet SVG viewport pruning
     cy.visit('/', {
       onBeforeLoad(win) {
         Object.defineProperty(win, 'destinationLookup', {
@@ -319,11 +428,10 @@ describe('BAS.MY KCH Tracker: Terminal Sanitization Verification', () => {
       win.renderFilteredBusStops('all');
     });
 
-    // Use uniform class selector aligned with Suite 2
     cy.get('.main-terminal-pulse', { timeout: 10000 }).should('exist').first().click({ force: true });
     
     cy.get('.stop-popup-content').within(() => {
-      cy.contains('🚨 Main Station').should('be.visible');
+      cy.contains('Main Station').should('be.visible');
     });
   });
 

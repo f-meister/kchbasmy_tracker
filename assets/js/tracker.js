@@ -20,6 +20,8 @@ const txtPopCode        = appShell?.dataset.txtPopCode        || 'Bus Code:';
 const txtPopVehicle     = appShell?.dataset.txtPopVehicle     || 'Vehicle ID:';
 const txtPopDestination = appShell?.dataset.txtPopDestination || 'Destination:';
 const txtPopSource      = appShell?.dataset.txtPopSource      || 'Source:';
+const txtPopScheduled   = appShell?.dataset.txtPopScheduled   || 'Scheduled Arrival Times:';
+const txtPopScheduledFailed = appShell?.dataset.txtPopScheduledFailed || 'Failed to load scheduled times';
 
 if (branchName === 'main') {
     const panel = document.getElementById('feed-control-wrapper');
@@ -30,7 +32,12 @@ if (branchName === 'main') {
 }
 
 // 1. Core Map Initializations
-const map = L.map('map').setView([1.5574, 110.3538], 12);
+const map = L.map('map', {
+    fullscreenControl: true,
+    fullscreenControlOptions: {
+        position: 'topleft'
+    }
+}).setView([1.5574, 110.3538], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
     attribution: '© OpenStreetMap contributors' 
 }).addTo(map);
@@ -48,6 +55,7 @@ window.geolocationWatchId = null;
 window.userLocationMarker = null;
 window.userAccuracyCircle = null;
 window.lastCalculatedPosition = null; 
+window.currentlyOpenStopId = null;
 
 // --- LEAFLET NATIVE GEOLOCATION CONTROL ELEMENT ---
 const LocationControl = L.Control.extend({
@@ -258,11 +266,35 @@ function renderFilteredBusStops(selectedCode) {
                 popupHeaderType = "🔄 " + txtLgInterchange;
             }
 
+            // COLLECT ALL SCHEDULED ARRIVAL TIMES FOR THIS STOP ID
+            let allStopTimes = [];
+
+            if (window.staticTripSchedules) {
+                Object.keys(window.staticTripSchedules).forEach(tripId => {
+                    const stopTimesMap = window.staticTripSchedules[tripId];
+                    if (stopTimesMap && stopTimesMap[stopId]) {
+                        allStopTimes.push(stopTimesMap[stopId]);
+                    }
+                });
+            }
+
+            const uniqueSortedTimes = [...new Set(allStopTimes)].sort((a, b) => a.localeCompare(b));
+
+            let scheduleListHtml = "";
+            if (uniqueSortedTimes.length === 0) {
+                scheduleListHtml = `<div class="stop-schedule-empty">${txtPopScheduledFailed}</div>`;
+            } else {
+                scheduleListHtml = uniqueSortedTimes.map(timeStr => {
+                    return `<span class="stop-schedule-tag">${timeStr}</span>`;
+                }).join('');
+            }
+            // ============================================================================
+
             const routeBadgesHtml = passingRoutes.sort().map(r => 
                 `<span class="popup-route-badge">${r}</span>`
             ).join('');
 
-            return L.circleMarker(latlng, {
+            const marker = L.circleMarker(latlng, {
                 radius: markerRadius, 
                 weight: isMainTerminal ? 3 : 2, 
                 fillColor: markerColor, 
@@ -274,12 +306,32 @@ function renderFilteredBusStops(selectedCode) {
                 <div class="stop-popup-content">
                     <span class="popup-label-type ${isMainTerminal ? 'popup-label-terminal' : ''}">${popupHeaderType}</span>
                     <strong class="popup-stop-title ${isMainTerminal ? 'popup-title-terminal' : ''}">${stopName}</strong>
+
+                    <div class="stop-schedule-section">
+                        <span class="stop-schedule-title">${txtPopScheduled}</span>
+                        <div class="stop-schedule-grid">
+                            ${scheduleListHtml}
+                        </div>
+                    </div>
+
                     <div class="popup-routes-list-wrapper">
                         <span class="popup-routes-label">${txtPopRoutes}</span>
                         <div class="popup-badges-grid">${routeBadgesHtml}</div>
                     </div>
                 </div>
-            `, { maxWidth: 250 });
+            `, { maxWidth: 280 });
+
+            // Restore popup visibility state on interval updates
+            if (window.currentlyOpenStopId === String(stopId)) {
+                setTimeout(() => marker.openPopup(), 10);
+            }
+
+            // Track open stops globally
+            marker.on('popupopen', () => {
+                window.currentlyOpenStopId = String(stopId);
+            });
+
+            return marker;
         }
     }).addTo(stopLayer);
 }
@@ -435,6 +487,10 @@ function syncLiveBusTracker() {
                  `, { maxWidth: 250 })
                  .addTo(busLayer);
             });
+
+            // Sync stop layers simultaneously with the telemetry interval loop to keep map robust
+            renderFilteredBusStops(routeSelection);
+
             if (refreshInd) refreshInd.textContent = txtLatest + ` (${selectedSource}): ${new Date().toLocaleTimeString()}`;
         })
         .catch(() => {
@@ -614,6 +670,99 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.setAttribute('data-tracking-state', 'seeking');
         }
     });
+
+    map.on('fullscreenchange', () => {
+        map.invalidateSize({ animate: true });
+    });
+
+    // Reset open popup index markers if a user explicitly closes a popup window
+    map.on('popupclose', (e) => {
+        if (e.popup._source && e.popup._source.options && e.popup._source.options.pane === 'busStopsPane') {
+            window.currentlyOpenStopId = null;
+        }
+    });
+
+    // TIMETABLE MODAL VIEWER INITIALIZATION
+    let timetableMapInstance = null;
+    const timetableLink = document.getElementById('route-timetable-link');
+
+    if (timetableLink) {
+        timetableLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const imageUrl = this.getAttribute('href');
+            const modalOverlay = document.getElementById('timetable-modal-overlay');
+            const currentRouteText = document.getElementById('route-description-text').innerText || "Transit Map";
+            
+            document.getElementById('timetable-modal-title').innerText = currentRouteText;
+            modalOverlay.style.display = 'block';
+
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = function() {
+                const w = this.width;
+                const h = this.height;
+
+                if (timetableMapInstance) {
+                    timetableMapInstance.remove();
+                }
+
+                timetableMapInstance = L.map('timetable-image-viewer', {
+                    minZoom: -1,
+                    maxZoom: 2,
+                    center: [0, 0],
+                    zoom: 0,
+                    crs: L.CRS.Simple, 
+                    zoomControl: true,
+                    attributionControl: false,
+                    fadeAnimation: true,
+                    zoomAnimation: true
+                });
+
+                const southWest = timetableMapInstance.unproject([0, h], timetableMapInstance.getMaxZoom());
+                const northEast = timetableMapInstance.unproject([w, 0], timetableMapInstance.getMaxZoom());
+                const bounds = new L.LatLngBounds(southWest, northEast);
+
+                L.imageOverlay(imageUrl, bounds).addTo(timetableMapInstance);
+
+                timetableMapInstance.setMaxBounds(bounds);
+                timetableMapInstance.fitBounds(bounds, {animate: false});
+
+                setTimeout(() => {
+                    if (timetableMapInstance) {
+                        timetableMapInstance.options.zoomAnimation = true;
+                        timetableMapInstance.options.fadeAnimation = true;
+                    }
+                }, 50);
+            };
+        });
+    }
+
+    // Modal Teardown Trigger Hook (X Button)
+    const modalCloseBtn = document.getElementById('timetable-modal-close');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', () => {
+            document.getElementById('timetable-modal-overlay').style.display = 'none';
+            if (timetableMapInstance) {
+                timetableMapInstance.remove();
+                timetableMapInstance = null;
+            }
+        });
+    }
+
+    // Backdrop Click Teardown Trigger Hook
+    const modalOverlayBtn = document.getElementById('timetable-modal-overlay');
+    if (modalOverlayBtn) {
+        modalOverlayBtn.addEventListener('click', (e) => {
+            if (e.target.id === 'timetable-modal-overlay') {
+                modalOverlayBtn.style.display = 'none';
+                if (timetableMapInstance) {
+                    timetableMapInstance.remove();
+                    timetableMapInstance = null;
+                }
+            }
+        });
+    }
 
     injectDynamicCopyrightYear();
     initializeRouteSelector();
