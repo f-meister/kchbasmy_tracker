@@ -396,6 +396,7 @@ h1 {
     font-family: system-ui, -apple-system, sans-serif;
     padding: 2px;
     color: #0f172a;
+    min-width: 220px;
 }
 
 .popup-label-type {
@@ -623,4 +624,53 @@ h1 {
     width: 100% !important;
     height: 100% !important;
     z-index: 99999;
+}
+
+/* --- Bus Stop Popup Timetable Grid --- */
+.stop-schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+/* Individual Schedule Time Tag */
+.stop-schedule-tag {
+    background-color: #f1f5f9;
+    color: #334155;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Schedule Fallback Error/Empty Alert Row */
+.stop-schedule-empty {
+    color: #64748b;
+    font-style: italic;
+    font-size: 11px;
+    padding: 4px 0;
+}
+
+/* Container section wrapping the timetable inside the popup */
+.stop-schedule-section {
+    margin-bottom: 10px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+}
+
+/* Header label above the timetable grid (e.g., "ALL SCHEDULED TIMES") */
+.stop-schedule-title {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
 }

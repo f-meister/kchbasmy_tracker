@@ -57,7 +57,9 @@
         data-txt-pop-vehicle="{{ hugo.Data.strings.popups.vehicle_id }}"
         data-txt-pop-destination="{{ hugo.Data.strings.popups.destination }}"
         data-txt-pop-source="{{ hugo.Data.strings.popups.source }}"
-        data-txt-pop-routes="{{ hugo.Data.strings.popups.routes }}">
+        data-txt-pop-routes="{{ hugo.Data.strings.popups.routes }}"
+        data-txt-pop-scheduled="{{ hugo.Data.strings.popups.scheduled_times }}"
+        data-txt-pop-schedules-failed="{{ hugo.Data.strings.popups.schedule_failed }}">
 
         <h3 class="app-header">
             <div class="brand-wrapper">
@@ -179,6 +181,7 @@
         {{ $stops := resources.Get "data/stops_locations.json" }}
         {{ $index := resources.Get "data/route_stops_index.json" }}
         {{ $destinations := resources.Get "data/destinations.json" }}
+        {{ $stopTimes := resources.Get "data/stop_times.json" }}
 
         // 2. Bind them to absolute JavaScript global windows for tracker.js to ingest
         window.routesPathsData = {{ if $paths }} {{ $paths.Content | safeJS }} {{ else }} null {{ end }};
@@ -187,6 +190,8 @@
 
         // EXPOSE THE DYNAMIC GTFS TERMINAL MAP:
         window.destinationLookup = {{ if $destinations }} {{ $destinations.Content | safeJS }} {{ else }} {} {{ end }};
+
+        window.staticTripSchedules = {{ if $stopTimes }} {{ $stopTimes.Content | safeJS }} {{ else }} {} {{ end }};
 
         // 3. Map native YAML values straight to window global memory namespaces
         window.timetableMap = {};
