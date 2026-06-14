@@ -266,13 +266,60 @@ function renderFilteredBusStops(selectedCode) {
                 popupHeaderType = "🔄 " + txtLgInterchange;
             }
 
-            // COLLECT ALL SCHEDULED ARRIVAL TIMES FOR THIS STOP ID
+            // COLLECT & AUTOMATED MULTI-ROUTE FILTER USING PRE-BUILD LOOKUP INDEX
             let allStopTimes = [];
 
+            // 1. Build a dynamic 1-to-1 Prefix-to-Route dictionary dynamically on the fly
+            if (!window.prefixToRouteLookup) {
+                window.prefixToRouteLookup = {};
+                
+                if (window.staticTripSchedules && window.routeStopsIndex) {
+                    Object.keys(window.staticTripSchedules).forEach(tId => {
+                        const prefix = tId.split('_')[0].trim().toUpperCase();
+                        if (window.prefixToRouteLookup[prefix]) return;
+
+                        const stopIds = Object.keys(window.staticTripSchedules[tId]);
+                        
+                        // Find a stop in this trip that belongs to exactly ONE route line
+                        for (let sId of stopIds) {
+                            const matchingRoutes = Object.keys(window.routeStopsIndex).filter(rKey => 
+                                window.routeStopsIndex[rKey].includes(sId)
+                            );
+                            
+                            // If this stop is exclusive to a single route, we've found a clean match
+                            if (matchingRoutes.length === 1) {
+                                window.prefixToRouteLookup[prefix] = matchingRoutes[0].toLowerCase();
+                                break;
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 2. Run the precision timetable filter loop
             if (window.staticTripSchedules) {
                 Object.keys(window.staticTripSchedules).forEach(tripId => {
                     const stopTimesMap = window.staticTripSchedules[tripId];
+                    
                     if (stopTimesMap && stopTimesMap[stopId]) {
+                        
+                        if (selectedCode !== 'all') {
+                            const lowerCode = selectedCode.toLowerCase();
+                            const prefix = tripId.split('_')[0].trim().toUpperCase();
+                            
+                            // FIRST GATE: Standard lookup check from compiled index file
+                            const supportedRoutes = (window.tripPrefixRoutesIndex && window.tripPrefixRoutesIndex[prefix]) || [];
+                            if (!supportedRoutes.includes(lowerCode)) return;
+
+                            // SECOND GATE: Use the precision lookup map to verify that this 
+                            // specific trip prefix is dedicated strictly to the selected route selection
+                            const exactRouteMatch = window.prefixToRouteLookup[prefix];
+                            if (exactRouteMatch && exactRouteMatch !== lowerCode) {
+                                console.log(`[Gate 2] Stripping out trip ${tripId} from route view: ${selectedCode}`);
+                                return;
+                            }
+                        }
+
                         allStopTimes.push(stopTimesMap[stopId]);
                     }
                 });
