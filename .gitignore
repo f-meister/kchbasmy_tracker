@@ -160,6 +160,7 @@ assets/data/stops_locations.json
 assets/data/route_stops_index.json
 static/data/trip_lookup.json
 assets/data/destinations.json
+assets/data/stop_times.json
 
 # Temporary directory where raw GTFS zip files are extracted
 tmp-gtfs/
