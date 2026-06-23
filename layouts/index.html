@@ -201,6 +201,16 @@
         {{ $stopTimes := resources.Get "data/stop_times.json" }}
         {{ $tripRoutes := resources.Get "data/trip_prefix_routes.json" }}
 
+        // 🚌 Route Suffix Configuration Lookup Dictionary Mapping
+        window.routeSuffixMap = {};
+        {{ if isset site.Data "route_suffix" }}
+            {{ if isset site.Data.route_suffix "route_suffix" }}
+                {{ range site.Data.route_suffix.route_suffix }}
+                    window.routeSuffixMap["{{ .route | upper }}"] = "{{ .suffix | upper }}";
+                {{ end }}
+            {{ end }}
+        {{ end }}
+
         window.routesPathsData = {{ if $paths }} {{ $paths.Content | safeJS }} {{ else }} null {{ end }};
         window.stopsData = {{ if $stops }} {{ $stops.Content | safeJS }} {{ else }} null {{ end }};
         window.routeStopsIndex = {{ if $index }} {{ $index.Content | safeJS }} {{ else }} {} {{ end }};
