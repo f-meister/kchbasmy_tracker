@@ -166,9 +166,9 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .find('option')
       .should('have.length.greaterThan', 1)
       .then(($options) => {
-        const text = $options.map((i, el) => el.text.trim()).get();
-        expect(text).to.include('Q10');
-        expect(text).to.include('Q08');
+        const values = $options.map((i, el) => el.value.trim().toUpperCase()).get();
+        expect(values).to.include('Q10');
+        expect(values).to.include('Q08');
       });
   });
 
