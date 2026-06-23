@@ -75,3 +75,13 @@ lang_current_flag:
   other: "🇬🇧"
 lang_swap_title:
   other: "Tukar ke Bahasa Melayu"
+control_zoom_in:
+  other: "Zoom in"
+control_zoom_out:
+  other: "Zoom out"
+control_fullscreen:
+  other: "View Fullscreen"
+control_fullscreen_exit:
+  other: "Exit Fullscreen"
+control_geolocate:
+  other: "Track My Location"

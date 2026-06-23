@@ -22,6 +22,11 @@ const txtPopDestination = appShell?.dataset.txtPopDestination || 'Destination:';
 const txtPopSource      = appShell?.dataset.txtPopSource      || 'Source:';
 const txtPopScheduled   = appShell?.dataset.txtPopScheduled   || 'Scheduled Arrival Times:';
 const txtPopScheduledFailed = appShell?.dataset.txtPopScheduledFailed || 'Failed to load scheduled times';
+const txtZoomIn         = appShell?.dataset.txtZoomIn         || 'Zoom in';
+const txtZoomOut        = appShell?.dataset.txtZoomOut        || 'Zoom out';
+const txtFullscreen     = appShell?.dataset.txtFullscreen     || 'View Fullscreen';
+const txtFullscreenExit = appShell?.dataset.txtFullscreenExit || 'Exit Fullscreen';
+const txtGeolocate     = appShell?.dataset.txtGeolocate     || 'Track My Location';
 
 if (branchName === 'main') {
     const panel = document.getElementById('feed-control-wrapper');
@@ -33,11 +38,24 @@ if (branchName === 'main') {
 
 // 1. Core Map Initializations
 const map = L.map('map', {
-    fullscreenControl: true,
-    fullscreenControlOptions: {
-        position: 'topleft'
-    }
+    zoomControl: false,
+    fullscreenControl: false
 }).setView([1.5574, 110.3538], 12);
+
+L.control.zoom({
+    position: 'topleft',
+    zoomInTitle: txtZoomIn,
+    zoomOutTitle: txtZoomOut
+}).addTo(map);
+
+L.control.fullscreen({
+    position: 'topleft',
+    title: {
+        'false': txtFullscreen,
+        'true':  txtFullscreenExit
+    }
+}).addTo(map);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
     attribution: '© OpenStreetMap contributors' 
 }).addTo(map);
@@ -63,7 +81,8 @@ const LocationControl = L.Control.extend({
     onAdd: function () {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-location-control');
         container.innerHTML = `
-            <button id="location-toggle-btn" data-tracking-state="off" title="Track My Location" aria-label="Track My Location" style="width: 30px; height: 30px; background: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <button id="location-toggle-btn" data-tracking-state="off" title="${txtGeolocate}" aria-label="${txtGeolocate}"
+                    style="width: 30px; height: 30px; background: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                 <svg class="map-svg-use" style="width: 18px; height: 18px;"><use href="#icon-crosshair"></use></svg>
             </button>
         `;

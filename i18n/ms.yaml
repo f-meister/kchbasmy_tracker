@@ -75,3 +75,13 @@ lang_current_flag:
   other: "🇲🇾"
 lang_swap_title:
   other: "Switch to English"
+control_zoom_in:
+  other: "Besarkan Peta"
+control_zoom_out:
+  other: "Kecilkan Peta"
+control_fullscreen:
+  other: "Lihat Skrin Penuh"
+control_fullscreen_exit:
+  other: "Keluar Skrin Penuh"
+control_geolocate:
+  other: "Jejak Lokasi Saya"
