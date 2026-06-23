@@ -42,6 +42,10 @@ const map = L.map('map', {
     fullscreenControl: false
 }).setView([1.5574, 110.3538], 12);
 
+if (map.dragging) {
+    map.dragging.enable();
+}
+
 L.control.zoom({
     position: 'topleft',
     zoomInTitle: txtZoomIn,
