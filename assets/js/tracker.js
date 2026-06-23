@@ -28,6 +28,16 @@ const txtFullscreen     = appShell?.dataset.txtFullscreen     || 'View Fullscree
 const txtFullscreenExit = appShell?.dataset.txtFullscreenExit || 'Exit Fullscreen';
 const txtGeolocate     = appShell?.dataset.txtGeolocate     || 'Track My Location';
 
+/**
+ * Utility to cleanly append visual-only M/B suffixes without mutating core datasets
+ */
+function getDisplayRouteCode(routeCode) {
+    if (!routeCode) return '';
+    const cleanKey = routeCode.trim().toUpperCase();
+    const suffix = window.routeSuffixMap && window.routeSuffixMap[cleanKey];
+    return suffix ? `${cleanKey}${suffix}` : cleanKey;
+}
+
 if (branchName === 'main') {
     const panel = document.getElementById('feed-control-wrapper');
     if (panel) panel.style.display = 'none';
@@ -173,8 +183,8 @@ function initializeRouteSelector() {
         const trackingCodes = window.routesPathsData.features.map(f => f.properties.routeCode ? f.properties.routeCode.toLowerCase() : '').filter(Boolean);
         [...new Set(trackingCodes)].sort().forEach(code => {
             const opt = document.createElement('option');
-            opt.value = code; 
-            opt.textContent = `${code.toUpperCase()}`; 
+            opt.value = code; // Remains original code (e.g. "q01") for data matching
+            opt.textContent = getDisplayRouteCode(code); // 🌟 VISUAL ONLY: Displays suffix (e.g. "Q01M")
             selector.appendChild(opt);
         });
     }
@@ -207,9 +217,10 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
         }, 200);
     } else {
         const descriptiveName = routeNamesLookup[selectedRoute.toLowerCase()] || '';
+
         if (descriptiveName) {
             label.classList.remove('route-prompt-text');
-            label.textContent = ` ${descriptiveName}`;
+            label.textContent = `${descriptiveName}`;
             label.style.display = 'inline-block';
             void label.offsetWidth; 
             label.style.opacity = '1';
@@ -234,7 +245,8 @@ function updateTimetableLink(selectedRoute) {
         container.style.display = 'none';
     } else {
         anchor.href = activeLink;
-        linkText.textContent = txtTimetable.replace('%ROUTE%', selectedRoute.toUpperCase());
+        // 🌟 Replaces template variable with the visual variant (e.g., Q01M)
+        linkText.textContent = txtTimetable.replace('%ROUTE%', getDisplayRouteCode(selectedRoute));
         container.style.display = 'inline-flex';
     }
 }
@@ -357,9 +369,11 @@ function renderFilteredBusStops(selectedCode) {
             }
             // ============================================================================
 
-            const routeBadgesHtml = passingRoutes.sort().map(r => 
-                `<span class="popup-route-badge">${r}</span>`
-            ).join('');
+            // 🌟 VISUAL FIX: Maps suffixed route indicators dynamically inside map stop popup listings
+            const routeBadgesHtml = passingRoutes.sort().map(r => {
+                const visualBadgeCode = getDisplayRouteCode(r);
+                return `<span class="popup-route-badge">${visualBadgeCode}</span>`;
+            }).join('');
 
             const marker = L.circleMarker(latlng, {
                 radius: markerRadius, 
@@ -542,11 +556,14 @@ function syncLiveBusTracker() {
                     finalDestination = destinationLookup[routeKey][dirId];
                 }
 
+                // 🌟 VISUAL FIX: Maps telemetry cards to utilize suffixed designations (e.g., Q14M)
+                const displayRoute = getDisplayRouteCode(bus.routeCode);
+
                 L.marker([bus.latitude, bus.longitude], { icon: busIcon })
                  .bindPopup(`
                     <div style="font-family: system-ui, sans-serif; font-size: 12px; min-width: 180px; color: #111;">
                         <span style="color: #2563eb; font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px;">${txtPopStream}</span>
-                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">${txtPopCode} ${bus.routeCode.toUpperCase()}</strong>
+                        <strong style="font-size: 15px; display: block; margin-bottom: 5px;">${txtPopCode} ${displayRoute}</strong>
                         <strong>${txtPopVehicle}</strong> ${bus.vehicleNumber}<br/>
                         <strong>${txtPopDestination}</strong> ${finalDestination}<br/>
                         <span style="color: grey; font-size: 10px; display: block; margin-top: 5px;">${txtPopSource} ${selectedSource.toUpperCase()}</span>
