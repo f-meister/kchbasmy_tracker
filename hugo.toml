@@ -2,6 +2,14 @@ baseURL = 'https://example.org/'
 locale = 'en-us'
 title = 'My New Hugo Project'
 
+[languages]
+  [languages.en]
+    label = "English"
+    weight = 1
+  [languages.ms]
+    label = "Bahasa Melayu"
+    weight = 2
+
 [security]
   enableInlineShortcodes = false
 
