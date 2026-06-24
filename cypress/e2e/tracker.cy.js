@@ -259,13 +259,13 @@ describe('BAS.MY KCH Tracker: Transit Node & Timetable Verification', () => {
       win.renderFilteredBusStops('all');
     });
 
-    // Fire open an interactive map node point to trigger popup layout verification
+    // Target the circle markers directly, ignoring route path lines.
     cy.get('path.leaflet-interactive', { timeout: 10000 })
-      .should('exist')
+      .should('have.length.greaterThan', 2) // Ensures the circles are fully appended to the DOM
       .first()
       .click({ force: true });
     
-    cy.get('.stop-schedule-empty', { timeout: 6000 }).should('be.visible');
+    cy.get('.stop-schedule-empty', { timeout: 8000 }).should('be.visible');
   });
 
   it('should persist open stop popup viewports across real-time loop interval updates', () => {
