@@ -1,22 +1,32 @@
 # Kuching BAS.MY Live Transit Tracker
 
-A community-driven, real-time spatial mapping fleet tracker for BAS.MY lines across Kuching, Sarawak. This application relies on a lightweight, vanilla Hugo frontend integrated with Leaflet.js to monitor live vehicle streams and route networks cleanly without overhead framework sandboxing.
+A community-driven, real-time spatial mapping fleet tracker for BAS.MY lines across Kuching, Sarawak. This webapp/site relies on a lightweight, vanilla Hugo frontend integrated with Leaflet.js to monitor live vehicle streams and route networks cleanly without overhead framework sandboxing.
 
+## Table of Contents
+- [Transit Data Architecture & API Mechanics](#transit-data-architecture--api-mechanics)
+- [Repository Architecture](#repository-architecture)
+- [Prerequisites](#prerequisites)
+- [Devcontainer Workspace Setup](#-devcontainer-workspace-setup)
+- [Automated Quality of Life Run Scripts](#-automated-quality-of-life-run-scripts)
+- [Production Deployment Pipeline](#-production-deployment-pipeline)
 ---
 
-## 🗺️ Transit Data Architecture & API Mechanics
+## Transit Data Architecture & API Mechanics
 
-The application dynamically overlays two distinct layers of the General Transit Feed Specification (GTFS) protocol to render a complete spatial picture of the Kuching transit network.
-
-
+The application dynamically overlays two distinct layers of the General Transit Feed Specification (GTFS) protocol to render a complete spatial picture of the BAS.MY Kuching transit network.
 
 ### 1. GTFS Static (Build-Time Pipeline)
 GTFS Static data defines the permanent structural framework of the transit network (the "skeleton"). This includes stops, routes, shapes, and schedules.
 * **The Source:** Raw GTFS static tables (`routes.txt`, `trips.txt`, `stop_times.txt`, `stops.txt`, and `shapes.txt`) are updated periodically by transit operators.
-* **Ingestion Mechanic:** Your local `.devcontainer/setup.sh` triggers the `parse-shapes.js` compiler. This script parses the structural text tables and collapses them into highly optimized, street-accurate GeoJSON arrays.
-* **Output Targets:** * `assets/data/routes_paths.json`: Contains the continuous polyline coordinate paths for every active line.
-  * `assets/data/stops_locations.json`: Contains point coordinates and station names for all physical bus stops.
+* **Ingestion Mechanic:** The local `.devcontainer/setup.sh` triggers the parser scripts (`parse-destinations.js`, `parse-shapes.js`, `parse-stop-times.js`, `parse-trip-routes.js`) to prepare the data for the frontend, as well as a data validation script (`validate-gtfs.js`) to validate the data before ingestion happens. .
+* **Output Targets:**
+  * `assets/data/destinations.json`: Contains start and end points for a particular route
   * `assets/data/route_stops_index.json`: A pre-compiled index mapping specific route codes directly to arrays of valid `stop_id` values. This avoids heavy filtering logic in the browser.
+  * `assets/data/routes_paths.json`: Contains the continuous polyline coordinate paths for every active line.
+  * `assets/data/stop_times.json`: Contains the scheduled bus stop times for each stop, mapped to each specific route.
+  * `assets/data/stops_locations.json`: Contains point coordinates and station names for all physical bus stops.
+  * `assets/data/trip_prefix_routes.json`: Contains the mapping for each route to each route_id prefix used for filtering the different bus stop times per route. 
+  
 
 ### 2. GTFS Realtime (Runtime Telemetry Stream)
 GTFS Realtime (GTFS-RT) provides live, dynamic telemetry updates (the "heartbeat"). It feeds data about vehicle positions, arrival delays, and service alerts.
@@ -25,44 +35,92 @@ GTFS Realtime (GTFS-RT) provides live, dynamic telemetry updates (the "heartbeat
 * **The Proxy:** The serverless function (`functions/api/buses.js`) fetches the raw, compressed binary GTFS-RT protobuf feed from the official transit data API, unmarshals the protocol buffer data into standard JSON objects, maps vehicle identifiers, and passes a clean, lightweight array back to your browser.
 
 ### 3. How They Relate (The Synchronization Key)
-To tie a floating live bus coordinate to a readable name on your map canvas, the application uses **`static/data/trip_lookup.json`** as a cross-referencing dictionary:
+To tie a floating live bus coordinate to a readable name on the map canvas, the application uses **`static/data/trip_lookup.json`** as a cross-referencing dictionary:
 
 1. **The Live Entity:** The GTFS-RT stream reports a live bus with a coordinate `[Lat, Lng]` and a specific `trip_id`. It does *not* natively contain the friendly bus line name (like "Q10").
 2. **The Relational Lookup:** The JavaScript engine intercepts the `trip_id` from the live feed and looks it up inside the pre-compiled `trip_lookup.json` static map.
 3. **The Mapping:** This dictionary resolves the active `trip_id` back to its structural `route_id` and `route_short_name` ("routeCode"). 
-4. **The UI Render:** Once the route code is resolved, the script draws the correct matching polyline from `routes_paths.json`, filters out irrelevant stations using `route_stops_index.json`, and pins the vehicle marker accurately on the map grid.
+4. **The UI Render:** Once the route code is resolved, the script draws the correct matching polyline from `routes_paths.json`, filters out irrelevant stations using `route_stops_index.json`, and pins the vehicle marker accurately on the map grid. 
+
+There are more details with regards to the other `.json` files but these are more related to the rendering and filtering of bus schedule times per bus stop.
 
 ---
 
 
-## 📂 Repository Architecture
+## Repository Architecture
 
 ```text
 ├── .devcontainer/
 │   ├── scripts/
 │   │   └── parse-shapes.js      # Compiles raw transit routing vectors
 │   └── devcontainer.json        # Standardized runtime & testing toolchains
-├── assets/data/                 # Build-time JSON arrays (Hugo Resource Pipe targets)
-│   ├── route_stops_index.json
-│   ├── routes_paths.json
-│   └── stops_locations.json
-├── static/data/
-│   └── trip_lookup.json         # Backend metadata mapping dictionary
+├── archetypes/
+│   └── default.md               # Hugo content archetype template
+├── assets/
+│   ├── css/
+│   │   └── tracker.css          # Stylesheet for the tracker interface
+│   ├── data/                    # Build-time JSON arrays (Hugo Resource Pipe targets)
+│   │   ├── destinations.json
+│   │   ├── route_stops_index.json
+│   │   ├── routes_paths.json
+│   │   ├── stop_times.json
+│   │   ├── stops_locations.json
+│   │   └── trip_prefix_routes.json
+│   ├── fallback/
+│   └── js/
+│       └── tracker.js           # Core frontend application logic
+├── cypress/                     # End-to-end testing suite
+│   └── e2e/
+│       ├── tracker-fallback.cy.js
+│       ├── tracker-lang.cy.js
+│       └── tracker.cy.js
+├── data/
+│   ├── route_suffix.yml
+│   ├── timetable_map.yml
+│   └── test/
+│       └── dummy_bus_loc.json   # Pure simulation payload database
 ├── functions/api/
 │   └── buses.js                 # Cloudflare Pages Serverless Edge API (Live / Mock proxy)
-├── data/test/
-│   └── dummy_bus_loc.json       # Pure simulation payload database
+├── i18n/                        # Internationalization language files
+│   ├── en.yaml
+│   └── ms.yaml
 ├── layouts/
-│   └── index.html               # High-performance full-bleed single-page app frontend
+│   ├── index.html               # High-performance full-bleed single-page app frontend
+│   └── _default/
+│       └── taxonomy.html
+├── static/data/
+│   └── trip_lookup.json         # Backend metadata mapping dictionary
+├── cypress.config.js            # Cypress test framework configuration
 ├── hugo.toml                    # Strict build pipeline configuration rules
+├── package.json                 # Node.js dependencies and scripts
 ├── run_config.yml               # Local runtime environment configuration parameters
+├── wrangler.json                # Cloudflare Workers configuration
 ├── init_data.sh                 # Data asset synchronization wrapper script
 ├── run_local.sh                 # Dynamic pipeline build and runtime proxy execution runner
 └── run_local_full.sh            # Master entrypoint script for a full stack hot-reload
 ```
 ---
+## Prerequisites
 
-## 🐳 Devcontainer Workspace Setup
+Before setting up the development environment, ensure you have the following installed and configured:
+
+### Required Software
+- **Git:** Version control system for cloning the repository and managing commits.
+- **Docker / Docker Desktop:** Container runtime required to build and run the devcontainer environment.
+  - [Docker Desktop for macOS](https://www.docker.com/products/docker-desktop)
+  - [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+  - [Docker for Linux](https://docs.docker.com/engine/install/)
+
+### VS Code Extensions
+- **Dev Containers:** Microsoft's official extension for managing containerized development environments. Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) or search `ms-vscode-remote.remote-containers` in VS Code's Extensions panel.
+
+### System Requirements
+- **Disk Space:** At least 2GB free space for Docker images and node dependencies.
+- **RAM:** Minimum 4GB available (8GB+ recommended for smooth performance).
+- **Network Access:** Required for initial setup to download Docker layers and npm packages.
+
+---
+## Devcontainer Workspace Setup
 This repository includes a pre-configured VS Code Devcontainer environment. This ensures that everyone working on the project uses the exact same software versions, dependencies, and system toolchains automatically without polluting local machines.
 
 ### What is included inside the box:
@@ -83,10 +141,10 @@ This repository includes a pre-configured VS Code Devcontainer environment. This
 
 ---
 
-## 🛠️ Automated Quality of Life Run Scripts
+## Automated Quality of Life Run Scripts
 To minimize manual terminal inputs and easily swap environment parameters, use these localized workspace management scripts.
 
-1. Configure Your Runtime Target (`run_config.yml`)
+### 1. Configure Your Runtime Target (`run_config.yml`)
 Modify the `branch` parameter to toggle environment-specific features instantly at runtime. There is also a `gtfs-status` parameter to testing the case where gtfs-realtime data is empty.
 
 ```YAML
@@ -96,31 +154,70 @@ development:
   gtfs-status: "normal" # "test" for empty route data simulation (sometimes API returns empty static gtfs data...)
                         # "normal" for live API data
 ```
-2. Full Workspace Initialization & Execution (Recommended)
+
+### 2. Full Workspace Initialization & Execution (Recommended)
 This script performs a complete clean-slate rebuild. It wipes all build caches, clears old local dataset arrays, fetches fresh spatial data points, and brings up the local proxy server:
 
 ```Bash
 ./run_local_full.sh
 ```
 
-3. Isolated Component Run Commands
+### 3. Isolated Component Run Commands
 If you need to trigger granular components of the pipeline independently, you can run them directly:
 
-Synchronize Datasets Only: Clears out old target files in `assets/data/` and `static/data/` and forces a clean pull from your shape parsing scripts.
+**Synchronize Datasets Only:** Clears out old target files in `assets/data/` and `static/data/` and forces a clean pull from your shape parsing scripts.
 
 ```Bash
 ./init_data.sh
 ```
-Run Compilation & Server Proxy Only: Overrides `CF_PAGES_BRANCH` with your configured YAML target, cleans out `public/` compilation logs, and maps the app locally to port `8788`.
+
+**Run Compilation & Server Proxy Only:** Overrides `CF_PAGES_BRANCH` with your configured YAML target, cleans out `public/` compilation logs, and maps the app locally to port `8788`.
 
 ```Bash
 ./run_local.sh
 ```
-Note: If your local runtime logs show permission block warnings, apply execution rights via `chmod +x *.sh` inside the terminal container.
+
+### 4. NPM-Based Development Commands
+You can also use npm scripts directly from the `package.json` for more granular control:
+
+**Start Wrangler Development Server Only:** Launches the Cloudflare Pages local development server (useful for quick development without full Hugo rebuild):
+
+```Bash
+npm start
+```
+
+This runs `wrangler pages dev public` and maps the application to port `8788`.
+
+### 5. Testing & Quality Assurance
+The repository includes an end-to-end test suite powered by Cypress. Tests are located in `cypress/e2e/` and cover tracker functionality, language switching, and fallback behavior.
+
+**Run All Tests (Headless):** Execute the full test suite in headless mode:
+
+```Bash
+npx cypress run --headless
+```
+
+**Run Tests with GUI:** Launch Cypress Test Runner with an interactive browser for debugging and test inspection:
+
+```Bash
+npx cypress open
+```
+
+**Run Specific Test File:** Execute a single test file:
+
+```Bash
+npx cypress run --spec cypress/e2e/tracker.cy.js
+```
+
+The test suite is configured to run against `http://localhost:8788`, so ensure the local development server is running before executing tests.
+
+### Notes
+- If your local runtime logs show permission block warnings, apply execution rights via `chmod +x *.sh` inside the terminal container.
+- Ensure you have run `npm install` or the setup process has completed to make `npx` commands available.
 
 ---
 
-## 🚀 Production Deployment Pipeline
+## Production Deployment Pipeline
 This repository is optimized for Cloudflare Pages architecture.
 
 - CI/CD Integration: When you push changes to GitHub, Cloudflare Pages intercepts the commit.
