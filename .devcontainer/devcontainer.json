@@ -11,8 +11,8 @@
     }
   },
 
-  // Structured chain execution sequence to handle Linux packages, local Node modules, and initial data parsing automatically
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y protobuf-compiler libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb && [ ! -f package.json ] && npm init -y || true && npm install --save-dev wrangler cypress gtfs-realtime-bindings && bash .devcontainer/setup.sh",
+  // Structured chain execution sequence to handle Linux packages, local Node modules, automated ESLint initializations, and initial data parsing automatically
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y protobuf-compiler libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb && [ ! -f package.json ] && npm init -y || true && npm install --save-dev wrangler cypress gtfs-realtime-bindings eslint @eslint/js globals && ( [ ! -f eslint.config.js ] && echo 'const js = require(\"@eslint/js\");\nconst globals = require(\"globals\");\n\nmodule.exports = [\n  js.configs.recommended,\n  {\n    languageOptions: {\n      ecmaVersion: 2024,\n      sourceType: \"script\",\n      globals: {\n        ...globals.browser,\n        ...globals.node,\n        L: \"readonly\",\n        getDisplayRouteCode: \"readonly\",\n        calculateHaversineDistance: \"readonly\",\n        renderSelectedRouteLine: \"readonly\",\n        renderFilteredBusStops: \"readonly\",\n        startUserLocationTracking: \"readonly\",\n        stopUserLocationTracking: \"readonly\",\n        syncLiveBusTracker: \"readonly\"\n      }\n    },\n    rules: {\n      \"no-unused-vars\": [\"warn\", { \"vars\": \"all\", \"args\": \"none\" }],\n      \"no-undef\": \"error\",\n      \"no-console\": \"off\"\n    }\n  }\n];' > eslint.config.js || true ) && bash .devcontainer/setup.sh",
 
   // Configure VS Code settings and pre-load your extensions
   "customizations": {
@@ -24,6 +24,7 @@
         }
       },
       "extensions": [
+        "dbaeumer.vscode-eslint",       // Pre-load real-time linting and style diagnostics directly in the IDE
         "drblury.protobuf-vsc",         // Advanced Protobuf schema support & formatting
         "anotak.protobuf-inspector",    // Live inline proto binary parsing layout
         "rangav.vscode-thunder-client", // GUI-based API client for checking data.gov.my payloads
