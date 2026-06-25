@@ -29,6 +29,9 @@ jobs:
       - name: Run Workspace Quality Linting Controls
         run: npm run lint
 
+      - name: Run Unit Test Suites
+        run: npm run test:unit
+
       - name: Execute Automated Static Ingestion Script
         run: bash .devcontainer/setup.sh
 
