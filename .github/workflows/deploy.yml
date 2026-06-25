@@ -24,7 +24,7 @@ jobs:
           cache: 'npm' # Automatically caches node_modules dependencies between pipeline runs
 
       - name: Install Project Workspace (Deterministic)
-        run: npm ci --no-audit --no-fund # ◄ Silent, fast, secure pipeline install
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Run Workspace Quality Linting Controls
         run: npm run lint
@@ -50,11 +50,14 @@ jobs:
       - name: Execute Headless Cypress End-to-End Suite
         uses: cypress-io/github-action@v6
         with:
-          # Starts local wrangler dev/pages server in the background
+          install: false
+          # Starts your local wrangler dev/pages server in the background
           start: npm run start
           # Wait explicitly for the consolidated Hugo tracker root page to return a clean 200 OK
           wait-on: 'http://localhost:8788'
-          wait-on-timeout: 120 # ◄ Extends boundary limits to 2 minutes to eliminate sudden timeout crashes
+          wait-on-timeout: 120
+          # Tells the action to execute your project-validated bin binary directly
+          command: npx cypress run
 
       - name: Archive Cypress Failure Screen Captures
         uses: actions/upload-artifact@v4
@@ -73,3 +76,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.98.0'
           command: pages deploy public --project-name="kchbasmy-tracker" --branch="${{ github.ref_name }}"
+          packageManager: npm
