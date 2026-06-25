@@ -194,12 +194,12 @@
 
     <script>
         // 1. Fetch Hugo asset files securely
-        {{ $paths := resources.Get "data/routes_paths.json" }}
-        {{ $stops := resources.Get "data/stops_locations.json" }}
-        {{ $index := resources.Get "data/route_stops_index.json" }}
-        {{ $destinations := resources.Get "data/destinations.json" }}
-        {{ $stopTimes := resources.Get "data/stop_times.json" }}
-        {{ $tripRoutes := resources.Get "data/trip_prefix_routes.json" }}
+        {{ $paths := resources.Get "data/routes_paths.json" | minify}}
+        {{ $stops := resources.Get "data/stops_locations.json" | minify}}
+        {{ $index := resources.Get "data/route_stops_index.json" | minify }}
+        {{ $destinations := resources.Get "data/destinations.json" | minify }}
+        {{ $stopTimes := resources.Get "data/stop_times.json" | minify }}
+        {{ $tripRoutes := resources.Get "data/trip_prefix_routes.json" | minify }}
         {{ $config := resources.Get "js/config.js" }}
         {{ $utils := resources.Get "js/utils.js" }}
         {{ $mapUtils := resources.Get "js/map_utils.js" }}
