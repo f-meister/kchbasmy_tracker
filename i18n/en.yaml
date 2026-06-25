@@ -1,0 +1,87 @@
+# i18n/en.yaml
+metadata_title:
+  other: "BAS.MY KCH Tracker"
+label_route:
+  other: "Bus Route:"
+option_all:
+  other: "All"
+label_feed:
+  other: "Data Feed Source:"
+feed_live:
+  other: "Live API"
+feed_mock:
+  other: "Simulation (Mock)"
+syncing:
+  other: "Syncing positions..."
+sync_failed:
+  other: "Sync execution failure"
+sync_latest:
+  other: "Last sync"
+route_prompt:
+  other: "◄ Choose the bus route you want to track"
+timetable_text:
+  other: "Click here for %ROUTE% Transit Map"
+timetable_fallback:
+  other: "Transit Map"
+legend_prompt:
+  other: "Tap icons for info!"
+legend_stop:
+  other: "Bus Stop"
+legend_interchange:
+  other: "Interchange"
+legend_station:
+  other: "Main Station"
+legend_bus:
+  other: "Active Bus"
+legend_geolocation:
+  other: "Where am I?"
+bus_stream:
+  other: "Active Vehicle Stream"
+bus_code:
+  other: "Bus Code:"
+vehicle_id:
+  other: "Vehicle ID:"
+destination:
+  other: "Destination:"
+source:
+  other: "Source:"
+routes:
+  other: "Available Routes"
+scheduled_times:
+  other: "Bus Schedule"
+scheduled_failed:
+  other: "Failed to load scheduled times"
+about_header:
+  other: "About the Tracker"
+about_tagline:
+  other: "Check location, routes, stops, interchanges, and transit maps for BAS.MY in Kuching, Malaysia!"
+about_features_title:
+  other: "Latest Updates"
+about_features_list_1:
+  other: "26/06/2026: add language selector + Malay translation + route code suffixes + documentation, fix fallback data"
+about_features_list_2:
+  other: "14/06/2026: add bus stop schedule with filtering + in-app transit maps + fullscreen map"
+about_features_list_3:
+  other: "08/06/2026: add geolocation marker + ko-fi link, fix more API data problems + warnings"
+about_contact_title:
+  other: "Get in Touch"
+about_btn_github:
+  other: "Visit GitHub Project"
+about_btn_contact:
+  other: "Feedback & Suggestions"
+lang_current_title:
+  other: "English Active"
+lang_current_flag:
+  other: "🇬🇧"
+lang_swap_title:
+  other: "Tukar ke Bahasa Melayu"
+control_zoom_in:
+  other: "Zoom in"
+control_zoom_out:
+  other: "Zoom out"
+control_fullscreen:
+  other: "View Fullscreen"
+control_fullscreen_exit:
+  other: "Exit Fullscreen"
+control_geolocate:
+  other: "Track My Location"

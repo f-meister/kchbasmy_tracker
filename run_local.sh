@@ -30,7 +30,9 @@ fi
 # 3. Export the target Cloudflare variable into the active shell environment
 export CF_PAGES_BRANCH="$BRANCH"
 
+echo "🔍 Running workspace quality linting controls..."
 echo "🏗️  Compiling static assets via Hugo & spinning up Wrangler proxy..."
 
 # 4. Fire the local development toolchains
-hugo && npx wrangler pages dev public --port 8788
+# 🌟 Added 'npm run lint' as a gated check to stop execution if scripts are broken
+npm run lint && npm run test:unit -- --run && hugo && npx wrangler pages dev public --port 8788

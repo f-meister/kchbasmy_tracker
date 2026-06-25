@@ -674,3 +674,38 @@ h1 {
     margin-bottom: 6px;
     letter-spacing: 0.05em;
 }
+
+/* --- HEADER LANGUAGE SELECTOR STYLES --- */
+.header-lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #1e293b;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #334155;
+    height: 34px;
+    box-sizing: border-box;
+}
+
+.header-lang-switcher .flag-emoji {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.lang-swap-btn {
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.lang-swap-btn:hover {
+    color: #f1f5f9;
+    transform: rotate(180deg);
+}
+
+.lang-swap-icon {
+    width: 16px;
+    height: 16px;
+}

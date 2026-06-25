@@ -1,0 +1,87 @@
+# i18n/ms.yaml
+metadata_title:
+  other: "Penjejak BAS.MY KCH"
+label_route:
+  other: "Laluan Bas:"
+option_all:
+  other: "Semua"
+label_feed:
+  other: "Sumber Data:"
+feed_live:
+  other: "API Langsung"
+feed_mock:
+  other: "Simulasi (Mock)"
+syncing:
+  other: "Menyemak kedudukan..."
+sync_failed:
+  other: "Gagal menyemak data"
+sync_latest:
+  other: "Semakan terakhir"
+route_prompt:
+  other: "◄ Pilih laluan bas yang ingin anda jejaki"
+timetable_text:
+  other: "Ketik sini untuk Peta Transit %ROUTE%"
+timetable_fallback:
+  other: "Peta Transit"
+legend_prompt:
+  other: "Ketik ikon untuk info!"
+legend_stop:
+  other: "Perhentian Bas"
+legend_interchange:
+  other: "Pertukaran Bas"
+legend_station:
+  other: "Stesen Utama"
+legend_bus:
+  other: "Bas Aktif"
+legend_geolocation:
+  other: "Di mana saya?"
+bus_stream:
+  other: "Aliran Kenderaan Aktif"
+bus_code:
+  other: "Kod Bas:"
+vehicle_id:
+  other: "ID Kenderaan:"
+destination:
+  other: "Destinasi:"
+source:
+  other: "Sumber:"
+routes:
+  other: "Laluan Tersedia"
+scheduled_times:
+  other: "Jadual Bas"
+scheduled_failed:
+  other: "Gagal memuatkan jadual waktu"
+about_header:
+  other: "Mengenai Penjejak ini"
+about_tagline:
+  other: "Semak lokasi, laluan, perhentian, pertukaran dan peta transit untuk BAS.MY di Kuching, Malaysia!"
+about_features_title:
+  other: "Kemas Kini Terbaharu"
+about_features_list_1:
+  other: "26/06/2026: tambah pemilih bahasa + terjemahan Melayu + akhiran kod laluan + dokumentasi, pembetulan data sandaran"
+about_features_list_2:
+  other: "14/06/2026: tambah jadual perhentian bas dengan penapisan + peta transit dalam apl + peta skrin penuh"
+about_features_list_3:
+  other: "08/06/2026: tambah penanda geolokasi + pautan ko-fi, pembetulan masalah data API + amaran"
+about_contact_title:
+  other: "Hubungi Kami"
+about_btn_github:
+  other: "Kunjungi Projek GitHub"
+about_btn_contact:
+  other: "Maklum Balas & Cadangan"
+lang_current_title:
+  other: "Bahasa Melayu Aktif"
+lang_current_flag:
+  other: "🇲🇾"
+lang_swap_title:
+  other: "Switch to English"
+control_zoom_in:
+  other: "Besarkan Peta"
+control_zoom_out:
+  other: "Kecilkan Peta"
+control_fullscreen:
+  other: "Lihat Skrin Penuh"
+control_fullscreen_exit:
+  other: "Keluar Skrin Penuh"
+control_geolocate:
+  other: "Jejak Lokasi Saya"

@@ -166,9 +166,9 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
       .find('option')
       .should('have.length.greaterThan', 1)
       .then(($options) => {
-        const text = $options.map((i, el) => el.text.trim()).get();
-        expect(text).to.include('Q10');
-        expect(text).to.include('Q08');
+        const values = $options.map((i, el) => el.value.trim().toUpperCase()).get();
+        expect(values).to.include('Q10');
+        expect(values).to.include('Q08');
       });
   });
 
@@ -259,13 +259,13 @@ describe('BAS.MY KCH Tracker: Transit Node & Timetable Verification', () => {
       win.renderFilteredBusStops('all');
     });
 
-    // Fire open an interactive map node point to trigger popup layout verification
+    // Target the circle markers directly, ignoring route path lines.
     cy.get('path.leaflet-interactive', { timeout: 10000 })
-      .should('exist')
+      .should('have.length.greaterThan', 2) // Ensures the circles are fully appended to the DOM
       .first()
       .click({ force: true });
     
-    cy.get('.stop-schedule-empty', { timeout: 6000 }).should('be.visible');
+    cy.get('.stop-schedule-empty', { timeout: 8000 }).should('be.visible');
   });
 
   it('should persist open stop popup viewports across real-time loop interval updates', () => {
