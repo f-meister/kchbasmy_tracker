@@ -57,10 +57,9 @@ function updateRouteDescriptionLabel(selectedRoute, isInitialBoot = false) {
         }, 200);
     } else {
         const descriptiveName = window.routeNamesLookup[selectedRoute.toLowerCase()] || '';
-        const visualRouteCode = getDisplayRouteCode(selectedRoute);
         if (descriptiveName) {
             label.classList.remove('route-prompt-text');
-            label.textContent = ` (${visualRouteCode}) ${descriptiveName}`;
+            label.textContent = `${descriptiveName}`;
             label.style.display = 'inline-block';
             void label.offsetWidth; label.style.opacity = '1';
         } else {
