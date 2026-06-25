@@ -24,7 +24,7 @@ jobs:
           cache: 'npm' # Automatically caches node_modules dependencies between pipeline runs
 
       - name: Install Project Workspace (Deterministic)
-        run: npm ci --no-audit --no-fund # ◄ Silent, fast, secure pipeline install
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Run Workspace Quality Linting Controls
         run: npm run lint
