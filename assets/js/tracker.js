@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    injectDynamicCopyrightYear();
+    window.injectDynamicCopyrightYear();
     initializeRouteSelector();
     renderFilteredBusStops('all');
     updateRouteDescriptionLabel('all', true);
