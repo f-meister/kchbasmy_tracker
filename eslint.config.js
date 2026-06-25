@@ -1,6 +1,7 @@
 const js = require("@eslint/js");
 const globals = require("globals");
 const cypressPlugin = require("eslint-plugin-cypress");
+const vitestPlugin = require("eslint-plugin-vitest");
 
 module.exports = [
   js.configs.recommended,
@@ -31,7 +32,7 @@ module.exports = [
     }
   },
 
-  // 2. Devcontainer Orchestration & Data Parsing Node Rules 
+  // 2. Devcontainer Orchestration & Data Parsing Node Rules
   {
     files: [".devcontainer/scripts/*.js", ".devcontainer/**/*.js"],
     languageOptions: {
@@ -67,6 +68,26 @@ module.exports = [
       "cypress/no-unnecessary-waiting": "warn",
       "no-undef": "error",
       "no-unused-vars": "off"
+    }
+  },
+
+  // 4. Vitest Unit Testing Target Block
+  {
+    files: ["test/**/*.test.js", "test/**/*.js"],
+    plugins: {
+      vitest: vitestPlugin
+    },
+    languageOptions: {
+      globals: {
+        ...vitestPlugin.environments.env.globals, // Automatically whitelist vitest's globals if needed
+        ...globals.node
+      }
+    },
+    rules: {
+      ...vitestPlugin.configs.recommended.rules, // Pull down recommended unit testing rules
+      "vitest/no-identical-title": "error",     // Prevents copy-pasting tests without changing titles
+      "vitest/no-commented-out-tests": "warn",   // Warns if you leave a test dead and commented out
+      "no-undef": "error"
     }
   }
 ];
