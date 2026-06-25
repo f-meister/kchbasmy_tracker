@@ -86,6 +86,20 @@ There are more details with regards to the other `.json` files but these are mor
 │       └── dummy_bus_loc.json   # Pure simulation payload database
 ├── functions/api/
 │   └── buses.js                 # Cloudflare Pages Serverless Edge API (Live / Mock proxy)
+├── test/                        # Local unit test suites for frontend and data pipeline logic
+│   ├── data-pipeline/
+│   │   ├── parse-destinations.test.js
+│   │   ├── parse-shapes.test.js
+│   │   ├── parse-stop-times.test.js
+│   │   ├── parse-trip-routes.test.js
+│   │   └── validate-gtfs.test.js
+│   └── frontend/
+│       ├── api.test.js
+│       ├── config.test.js
+│       ├── gps_utils.test.js
+│       ├── map_utils.test.js
+│       ├── tracker.test.js
+│       └── utils.test.js
 ├── i18n/                        # Internationalization language files
 │   ├── en.yaml
 │   └── ms.yaml
@@ -221,6 +235,28 @@ npx cypress run --spec cypress/e2e/tracker.cy.js
 ```
 
 The test suite is configured to run against `http://localhost:8788`, so ensure the local development server is running before executing tests.
+
+### Unit Tests
+This repository also includes fast local unit tests for frontend utilities and GTFS data-processing logic, powered by Vitest.
+
+- Unit tests are stored in `test/frontend/*.test.js` and `test/data-pipeline/*.test.js`.
+- Run all unit tests once:
+
+```Bash
+npm run test:unit
+```
+
+- Run unit tests in watch mode:
+
+```Bash
+npm run test:unit:watch
+```
+
+- Run full linting before commits:
+
+```Bash
+npm run lint
+```
 
 ### Notes
 - If your local runtime logs show permission block warnings, apply execution rights via `chmod +x *.sh` inside the terminal container.
