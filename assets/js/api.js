@@ -1,6 +1,6 @@
 // js/api.js
 
-function syncLiveBusTracker() {
+window.syncLiveBusTracker = function() {
     const routeSelectorEl = document.getElementById('route-selector');
     if (!routeSelectorEl) return;
     

@@ -175,7 +175,8 @@ async function validateAndPrepareGTFS() {
   }
   const fallbackSize = fs.statSync(FALLBACK_GTFS_PATH).size;
 
-  let sourceZipUsed = FALLBACK_GTFS_PATH;
+  // Initialize with the standard target path as the default baseline
+  let sourceZipUsed = TARGET_GTFS_PATH;
   let downloadedFromApi = false;
 
   // 2. Branch Execution based on gtfs-status setting
@@ -185,7 +186,7 @@ async function validateAndPrepareGTFS() {
       console.error(`❌ Simulation Error: Testing file missing at ${TEST_FAIL_GTFS_PATH}`);
       process.exit(1);
     }
-    // 🌟 Step 1: Force use of the bad file first to simulate an incoming data corruption scenario
+    // Overwrite default path only for simulation mode
     sourceZipUsed = TEST_FAIL_GTFS_PATH;
   } else {
     console.log(`📦 Master baseline fallback file size verified: ${fallbackSize} bytes`);
@@ -198,19 +199,16 @@ async function validateAndPrepareGTFS() {
       if (remoteSize >= fallbackSize) {
         console.log("✅ Validation Passed: Remote file is equal to or larger than fallback. Pulling...");
         await downloadFile(GTFS_API_URL, TARGET_GTFS_PATH);
-        sourceZipUsed = TARGET_GTFS_PATH;
         downloadedFromApi = true;
       } else {
         console.warn(`⚠️ Size Warning: Remote file (${remoteSize}B) is smaller than fallback baseline (${fallbackSize}B).`);
         console.log("🔄 Triggering Failsafe: Deploying master local fallback file directly...");
         fs.copyFileSync(FALLBACK_GTFS_PATH, TARGET_GTFS_PATH);
-        sourceZipUsed = TARGET_GTFS_PATH;
       }
     } catch (error) {
       console.error(`🚨 API Sync Failure [${error.message}]. Activating offline safety fallback strategy...`);
       console.log("🔄 Triggering Failsafe: Deploying master local fallback file directly...");
       fs.copyFileSync(FALLBACK_GTFS_PATH, TARGET_GTFS_PATH);
-      sourceZipUsed = TARGET_GTFS_PATH;
     }
   }
 

@@ -75,7 +75,7 @@ legend.onAdd = function () {
 legend.addTo(window.map);
 
 // --- STATIC TRANSIT MAP PATH & SHAPE LINE DRAW ENGINE ---
-function renderSelectedRouteLine(code) {
+window.renderSelectedRouteLine = function(code) {
     window.pathLayer.clearLayers();
     if (code === 'all' || !window.routesPathsData) return;
 
@@ -136,7 +136,7 @@ function renderSelectedRouteLine(code) {
 }
 
 // --- BUS STOPS VECTOR CIRCLES RENDER COMPILER ---
-function renderFilteredBusStops(selectedCode) {
+window.renderFilteredBusStops = function(selectedCode) {
     window.stopLayer.clearLayers();
     if (!window.stopsData || !window.stopsData.features) return;
 

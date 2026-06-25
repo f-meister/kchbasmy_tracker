@@ -48,7 +48,7 @@ function handleUserPositionError(err) {
     if (indicator) indicator.textContent = 'Location access denied or timed out.';
 }
 
-function startUserLocationTracking() {
+window.startUserLocationTracking = function() {
     const btn = document.getElementById('location-toggle-btn');
     if (!btn || window.geolocationWatchId !== null) return;
 
@@ -67,7 +67,7 @@ function startUserLocationTracking() {
     );
 }
 
-function stopUserLocationTracking() {
+window.stopUserLocationTracking = function() {
     const btn = document.getElementById('location-toggle-btn');
     if (window.geolocationWatchId !== null) {
         navigator.geolocation.clearWatch(window.geolocationWatchId);

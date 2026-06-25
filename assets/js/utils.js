@@ -3,7 +3,7 @@
 /**
  * Utility to cleanly append visual-only M/B suffixes without mutating core datasets
  */
-function getDisplayRouteCode(routeCode) {
+window.getDisplayRouteCode = function(routeCode) {
     if (!routeCode) return '';
     const cleanKey = routeCode.trim().toUpperCase();
     const suffix = window.routeSuffixMap && window.routeSuffixMap[cleanKey];
@@ -13,7 +13,7 @@ function getDisplayRouteCode(routeCode) {
 /**
  * Calculates geographical bounds distance using the Haversine mathematical algorithm
  */
-function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+window.calculateHaversineDistance = function(lat1, lon1, lat2, lon2) {
     const R = 6371000; // Earth radius in meters
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -33,7 +33,7 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
 /**
  * Direct DOM string manipulation injector utility for footer elements
  */
-function injectDynamicCopyrightYear() {
+window.injectDynamicCopyrightYear = function() {
     const yearElement = document.getElementById('copyright-year');
     if (yearElement) {
         yearElement.textContent = new Date().getFullYear();
