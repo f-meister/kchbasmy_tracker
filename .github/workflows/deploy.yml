@@ -73,3 +73,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.98.0'
           command: pages deploy public --project-name="kchbasmy-tracker" --branch="${{ github.ref_name }}"
+          packageManager: npm
