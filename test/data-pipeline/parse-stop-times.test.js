@@ -21,7 +21,7 @@ describe('parse-stop-times.js - Heavy Schedule Processing Engine Suite', () => {
 
     // 3. Mock Readline interface to simulate a file streaming lines dynamically
     mockReadline = {
-      createInterface: vi.fn().mockImplementation(({ input }) => {
+      createInterface: vi.fn().mockImplementation(() => {
         // Expose an asynchronous iterator framework to mimic "for await (const line of rl)"
         return {
           [Symbol.asyncIterator]: async function* () {
