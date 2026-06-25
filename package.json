@@ -6,7 +6,7 @@
   "scripts": {
     "start": "wrangler pages dev public",
     "test": "cypress run --headless",
-    "lint": "eslint assets/js/**/*.js"
+    "lint": "eslint assets/js/**/*.js .devcontainer/scripts/*.js"
   },
   "repository": {
     "type": "git",
