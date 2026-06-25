@@ -193,6 +193,12 @@ npm start
 
 This runs `wrangler pages dev public` and maps the application to port `8788`.
 
+**Lint JavaScript Files:** Validate the frontend, Cypress, and devcontainer scripts with ESLint:
+
+```Bash
+npm run lint
+```
+
 ### 5. Testing & Quality Assurance
 The repository includes an end-to-end test suite powered by Cypress. Tests are located in `cypress/e2e/` and cover tracker functionality, language switching, and fallback behavior.
 
