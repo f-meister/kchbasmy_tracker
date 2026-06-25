@@ -26,6 +26,9 @@ jobs:
       - name: Install Project Workspace (Deterministic)
         run: npm ci --no-audit --no-fund # ◄ Silent, fast, secure pipeline install
 
+      - name: Run Workspace Quality Linting Controls
+        run: npm run lint
+
       - name: Execute Automated Static Ingestion Script
         run: bash .devcontainer/setup.sh
 
@@ -49,7 +52,6 @@ jobs:
           # Wait explicitly for the consolidated Hugo tracker root page to return a clean 200 OK
           wait-on: 'http://localhost:8788'
           wait-on-timeout: 120 # ◄ Extends boundary limits to 2 minutes to eliminate sudden timeout crashes
-        # env block removed entirely. We want wait-on to explicitly reject 404s and 500s!
 
       - name: Archive Cypress Failure Screen Captures
         uses: actions/upload-artifact@v4
@@ -59,7 +61,6 @@ jobs:
           path: cypress/screenshots
           retention-days: 7
 
-      # --- GATE-CHECKED DEPLOYMENT DELIVERY LAYER ---
       - name: Deploy to Cloudflare Pages
         # Only allows the deployment block to execute if the build is on the main branch
         if: github.ref == 'refs/heads/main'
