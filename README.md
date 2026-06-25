@@ -67,8 +67,13 @@ There are more details with regards to the other `.json` files but these are mor
 │   │   ├── stops_locations.json
 │   │   └── trip_prefix_routes.json
 │   ├── fallback/
-│   └── js/
-│       └── tracker.js           # Core frontend application logic
+│   └── js/                     # Modular frontend application scripts
+│       ├── api.js              # Browser API proxy and feed orchestration
+│       ├── config.js           # Runtime configuration, branch detection, and feature toggles
+│       ├── gps_utils.js        # GPS coordinate transformations and distance helpers
+│       ├── map_utils.js        # Leaflet map rendering, polylines, and marker management
+│       ├── tracker.js          # Main tracker app flow, state coordination, and event wiring
+│       └── utils.js            # Shared utilities, localization, and platform helpers
 ├── cypress/                     # End-to-end testing suite
 │   └── e2e/
 │       ├── tracker-fallback.cy.js

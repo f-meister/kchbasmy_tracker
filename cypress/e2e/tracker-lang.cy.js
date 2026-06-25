@@ -3,6 +3,11 @@ describe('BAS.MY KCH Tracker - Native Multilingual E2E Verification', () => {
   // --- ENGLISH PATH TESTING ---
   context('English Workspace (Root Path)', () => {
     beforeEach(() => {
+      cy.intercept('GET', '**/api/buses*', {
+        delay: 500,
+        body: []
+      }).as('delayedBuses');
+
       // Visit the default absolute root path
       cy.visit('/');
     });
