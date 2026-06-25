@@ -6,7 +6,7 @@ describe('api.js - Core Ingestion API Tracker Engine Suite', () => {
   let apiCode;
 
   beforeEach(() => {
-    const apiPath = path.resolve(__dirname, '../assets/js/api.js');
+    const apiPath = path.resolve(__dirname, '../../assets/js/api.js');
     apiCode = fs.readFileSync(apiPath, 'utf8');
 
     global.window = {

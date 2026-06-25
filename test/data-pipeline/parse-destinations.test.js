@@ -8,7 +8,7 @@ describe('parse-destinations.js - Relational Terminal Terminus Compiler Suite', 
 
   beforeEach(() => {
     // 1. Read production source file contents
-    const scriptPath = path.resolve(__dirname, '../.devcontainer/scripts/parse-destinations.js');
+    const scriptPath = path.resolve(__dirname, '../../.devcontainer/scripts/parse-destinations.js');
     scriptCode = fs.readFileSync(scriptPath, 'utf8');
 
     // 2. Mock File System with directory safeguards

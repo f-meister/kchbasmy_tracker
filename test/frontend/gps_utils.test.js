@@ -11,7 +11,7 @@ describe('gps_utils.js - Core Geolocation Tracking Engine Suite', () => {
   });
 
   beforeEach(() => {
-    const gpsPath = path.resolve(__dirname, '../assets/js/gps_utils.js');
+    const gpsPath = path.resolve(__dirname, '../../assets/js/gps_utils.js');
     gpsCode = fs.readFileSync(gpsPath, 'utf8');
 
     global.window = {

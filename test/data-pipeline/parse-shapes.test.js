@@ -7,7 +7,7 @@ describe('parse-shapes.js - Spatial GeoJSON Compiler Engine Suite', () => {
   let mockFs, mockReadline;
 
   beforeEach(() => {
-    const scriptPath = path.resolve(__dirname, '../.devcontainer/scripts/parse-shapes.js');
+    const scriptPath = path.resolve(__dirname, '../../.devcontainer/scripts/parse-shapes.js');
     scriptCode = fs.readFileSync(scriptPath, 'utf8');
 
     mockFs = {

@@ -8,7 +8,7 @@ describe('parse-stop-times.js - Heavy Schedule Processing Engine Suite', () => {
 
   beforeEach(() => {
     // 1. Read production source file contents
-    const scriptPath = path.resolve(__dirname, '../.devcontainer/scripts/parse-stop-times.js');
+    const scriptPath = path.resolve(__dirname, '../../.devcontainer/scripts/parse-stop-times.js');
     scriptCode = fs.readFileSync(scriptPath, 'utf8');
 
     // 2. Setup standard Node File System spies

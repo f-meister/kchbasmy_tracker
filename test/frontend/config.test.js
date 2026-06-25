@@ -7,7 +7,7 @@ describe('config.js - Global App Configuration & L10N Environment Suite', () => 
 
   beforeEach(() => {
     // 1. Load the raw production source file
-    const configPath = path.resolve(__dirname, '../assets/js/config.js');
+    const configPath = path.resolve(__dirname, '../../assets/js/config.js');
     configCode = fs.readFileSync(configPath, 'utf8');
 
     // 2. Set up a pristine global object frame mock matching the browser structure

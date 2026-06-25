@@ -8,7 +8,7 @@ describe('parse-trip-routes.js - Multi-Route Interlining Dictionary Compiler Sui
 
   beforeEach(() => {
     // 1. Read production source file contents
-    const scriptPath = path.resolve(__dirname, '../.devcontainer/scripts/parse-trip-routes.js');
+    const scriptPath = path.resolve(__dirname, '../../.devcontainer/scripts/parse-trip-routes.js');
     scriptCode = fs.readFileSync(scriptPath, 'utf8');
 
     // 2. Mock File System with compiled mock JSON strings

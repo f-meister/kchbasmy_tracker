@@ -12,7 +12,7 @@ describe('utils.js - Core Functional Utilities Suite', () => {
     global.document = {};
 
     // 2. Read and dynamically execute your real production file contextually
-    const utilsPath = path.resolve(__dirname, '../assets/js/utils.js');
+    const utilsPath = path.resolve(__dirname, '../../assets/js/utils.js');
     const utilsCode = fs.readFileSync(utilsPath, 'utf8');
     
     // Evaluates your file, binding window.calculateHaversineDistance, window.getDisplayRouteCode, etc.

@@ -7,7 +7,7 @@ describe('map_utils.js - Leaflet Canvas & GeoJSON Render Engine Suite', () => {
 
   beforeEach(() => {
     // 1. Read production source file contents
-    const mapUtilsPath = path.resolve(__dirname, '../assets/js/map_utils.js');
+    const mapUtilsPath = path.resolve(__dirname, '../../assets/js/map_utils.js');
     mapUtilsCode = fs.readFileSync(mapUtilsPath, 'utf8');
 
     // 2. Initialize pristine global window context properties

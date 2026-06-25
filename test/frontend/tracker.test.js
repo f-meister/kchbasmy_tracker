@@ -7,7 +7,7 @@ describe('tracker.js - Global App Orchestration Bootstrapper Suite', () => {
 
   beforeEach(() => {
     // 1. Read production source file contents
-    const trackerPath = path.resolve(__dirname, '../assets/js/tracker.js');
+    const trackerPath = path.resolve(__dirname, '../../assets/js/tracker.js');
     trackerCode = fs.readFileSync(trackerPath, 'utf8');
 
     // 2. Create a universal fluent spy object that safely handles chained Leaflet invocations

@@ -9,7 +9,7 @@ describe('validate-gtfs.js - Automated Lifecycle Validation Pipeline Suite', () 
 
   beforeEach(() => {
     // 1. Read production source file contents
-    const scriptPath = path.resolve(__dirname, '../.devcontainer/scripts/validate-gtfs.js');
+    const scriptPath = path.resolve(__dirname, '../../.devcontainer/scripts/validate-gtfs.js');
     scriptCode = fs.readFileSync(scriptPath, 'utf8');
 
     // 2. Build explicit spies for standard Node File System rules
