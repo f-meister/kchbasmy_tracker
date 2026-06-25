@@ -6,7 +6,7 @@
   "scripts": {
     "start": "wrangler pages dev public",
     "test": "cypress run --headless",
-    "lint": "eslint assets/js/**/*.js .devcontainer/scripts/*.js"
+    "lint": "eslint assets/js/**/*.js .devcontainer/scripts/*.js cypress/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
     "@eslint/js": "^10.0.1",
     "cypress": "^15.18.0",
     "eslint": "^10.5.0",
+    "eslint-plugin-cypress": "^6.4.1",
     "globals": "^17.7.0",
     "gtfs-realtime-bindings": "^2.0.0",
     "wrangler": "^4.104.0"
