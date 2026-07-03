@@ -9,6 +9,9 @@ title = 'My New Hugo Project'
   [languages.ms]
     label = "Bahasa Melayu"
     weight = 2
+  [languages.zh]
+    label = "中文"
+    weight = 3
 
 [security]
   enableInlineShortcodes = false
