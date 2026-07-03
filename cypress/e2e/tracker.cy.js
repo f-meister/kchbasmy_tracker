@@ -169,6 +169,19 @@ describe('BAS.MY KCH Tracker: Core Engine Validation', () => {
     cy.get('#info-modal-overlay').should('not.be.visible');
   });
 
+  it('should correctly render the special thanks contributor container with accurate styles', () => {
+    cy.get('#info-modal-trigger').click();
+    cy.get('#info-modal-card').should('be.visible');
+    cy.get('.special-thanks-container').within(() => {
+        cy.get('h4.special-thanks-title')
+          .should('be.visible')
+          .and('not.be.empty');
+        cy.get('p.special-thanks-text')
+          .should('be.visible')
+          .and('not.be.empty');
+    });
+  });
+
   it('should visually render the map legend context layout component layers', () => {
     cy.get('.map-legend')
       .should('be.visible')
