@@ -85,3 +85,7 @@ control_fullscreen_exit:
   other: "退出全屏"
 control_geolocate:
   other: "定位我的位置"
+modal_thanks_title:
+  other: "特别鸣谢"
+modal_thanks_text:
+  other: "非常感谢 Andy T、M. Faiz 以及所有支持这个项目的了不起的人们！"

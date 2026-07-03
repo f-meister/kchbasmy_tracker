@@ -85,3 +85,7 @@ control_fullscreen_exit:
   other: "Keluar Skrin Penuh"
 control_geolocate:
   other: "Jejak Lokasi Saya"
+modal_thanks_title:
+  other: "Terima Kasih Khas"
+modal_thanks_text:
+  other: "Ribuan terima kasih kepada Andy T, M. Faiz, dan anda semua yang menyokong projek ini!"

@@ -85,3 +85,7 @@ control_fullscreen_exit:
   other: "Exit Fullscreen"
 control_geolocate:
   other: "Track My Location"
+modal_thanks_title:
+  other: "Special Thanks"
+modal_thanks_text:
+  other: "Many thanks to Andy T, M. Faiz, and all you amazing people who support this project!"
