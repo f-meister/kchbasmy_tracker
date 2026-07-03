@@ -86,39 +86,11 @@
             </button>
 
             <div class="header-lang-switcher">
-                <span class="lang-btn current" title="{{ .Language.LanguageName }}">
-                    {{ i18n "lang_current_flag" }}
-                </span>
-
-                {{ $currentLang := .Language.Lang }}
-                {{ $nextPage := "" }}
-                {{ $firstPage := "" }}
-                {{ $matchNext := false }}
-
-                {{ range .AllTranslations }}
-                    {{ if eq $firstPage "" }}
-                        {{ $firstPage = . }}
-                    {{ end }}
-                    
-                    {{ if $matchNext }}
-                        {{ $nextPage = . }}
-                        {{ $matchNext = false }}
-                    {{ end }}
-                    
-                    {{ if eq .Language.Lang $currentLang }}
-                        {{ $matchNext = true }}
-                    {{ end }}
-                {{ end }}
-
-                {{ $targetPage := $nextPage }}
-                {{ if eq $targetPage "" }}
-                    {{ $targetPage = $firstPage }}
-                {{ end }}
-
-                {{ with $targetPage }}
-                    <a href="{{ .RelPermalink }}" class="lang-swap-btn" title="Switch Language" aria-label="Switch Language">
-                        <svg class="lang-swap-icon"><use href="#icon-swap"></use></svg>
-                    </a>
+                <span class="flag-emoji" title="{{ i18n "lang_current_title" }}">{{ i18n "lang_current_flag" }}</span>
+                {{ range .Site.Home.Translations }}
+                <a href="{{ .RelPermalink }}" class="lang-swap-btn" title="{{ i18n "lang_swap_title" }}" aria-label="{{ i18n "lang_swap_title" }}">
+                    <svg class="lang-swap-icon"><use href="#icon-swap"></use></svg>
+                </a>
                 {{ end }}
             </div>
         </h3>
