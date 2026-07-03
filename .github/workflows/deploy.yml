@@ -33,6 +33,8 @@ jobs:
         run: npm run test:unit
 
       - name: Execute Automated Static Ingestion Script
+        env:
+          STATIC_GTFS_URL: ${{ secrets.STATIC_GTFS_URL }}
         run: bash .devcontainer/setup.sh
 
       - name: Setup Hugo Compiler
