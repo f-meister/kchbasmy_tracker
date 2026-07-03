@@ -323,3 +323,23 @@ hugo
 ```
 
 - Branch Isolation Logic: The repository detects branch status automatically. If the deployment is on the `main` branch, the user interface hides all development tools and permanently locks the stream directly to the live server transit feed. Staging or preview branch builds preserve the simulation tools for remote testing
+
+---
+
+## Contributors
+
+We welcome contributions from the community! Whether you're fixing bugs, adding features, improving documentation, or helping with translations, your contributions are appreciated.
+
+### How to Contribute
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add your feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+### Special Thanks To
+- **BAS.MY Kuching & Bas Asia:** For providing access to the official GTFS transit data and support
+- **Leaflet.js Community:** For the excellent open-source mapping library
+- **Hugo Project:** For the fast, flexible static site generator
+- **Cloudflare Pages:** For hosting and infrastructure support
+- **Community Contributors:** Mr Andy T, Mr M. Faiz, and all who have helped improve this tracker! Much love to you all!!!

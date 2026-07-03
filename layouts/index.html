@@ -86,7 +86,7 @@
             </button>
 
             <div class="header-lang-switcher">
-                <span class="lang-btn current" title="{{ .Language.LanguageName }}">
+                <span class="lang-btn current" title="{{ .Language.Label }}">
                     {{ i18n "lang_current_flag" }}
                 </span>
 
@@ -173,6 +173,15 @@
                     • {{ i18n "about_features_list_3" }}<br>
                 </div>
 
+                <div class="special-thanks-container">
+                    <h4 class="special-thanks-title">
+                        {{ i18n "modal_thanks_title"}}
+                    </h4>
+                    <p class="special-thanks-text">
+                        {{ i18n "modal_thanks_text"}}
+                    </p>
+                </div>
+
                 <div class="modal-contact-section">
                     <strong>{{ i18n "about_contact_title" }}</strong>
                     <div class="modal-links-wrapper">
@@ -239,9 +248,9 @@
 
         // 🚌 Route Suffix Configuration Lookup Dictionary Mapping
         window.routeSuffixMap = {};
-        {{ if isset site.Data "route_suffix" }}
-            {{ if isset site.Data.route_suffix "route_suffix" }}
-                {{ range site.Data.route_suffix.route_suffix }}
+        {{ if isset hugo.Data "route_suffix" }}
+            {{ if isset hugo.Data.route_suffix "route_suffix" }}
+                {{ range hugo.Data.route_suffix.route_suffix }}
                     window.routeSuffixMap["{{ .route | upper }}"] = "{{ .suffix | upper }}";
                 {{ end }}
             {{ end }}
