@@ -58,11 +58,11 @@ about_tagline:
 about_features_title:
   other: "Latest Updates"
 about_features_list_1:
-  other: "26/06/2026: add language selector + Malay translation + route code suffixes + documentation, fix fallback data"
+  other: "04/07/2026: add zh-MY language support"
 about_features_list_2:
-  other: "14/06/2026: add bus stop schedule with filtering + in-app transit maps + fullscreen map"
+  other: "26/06/2026: add language selector + Malay translation + route code suffixes + documentation, fix fallback data"
 about_features_list_3:
-  other: "08/06/2026: add geolocation marker + ko-fi link, fix more API data problems + warnings"
+  other: "14/06/2026: add bus stop schedule with filtering + in-app transit maps + fullscreen map"
 about_contact_title:
   other: "Get in Touch"
 about_btn_github:
