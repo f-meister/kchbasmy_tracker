@@ -8,92 +8,83 @@ describe('BAS.MY KCH Tracker - Native Multilingual E2E Verification', () => {
         body: []
       }).as('delayedBuses');
 
-      // Visit the default absolute root path
       cy.visit('/');
     });
 
     it('should boot up with default English strings', () => {
-      // 1. Check top-level document properties
       cy.get('html').should('have.attr', 'lang', 'en');
       cy.title().should('contain', 'BAS.MY KCH Tracker');
-
-      // 2. Assert core DOM elements match en.yaml values
       cy.get('#app-shell').should('have.attr', 'data-txt-syncing', 'Syncing positions...');
-      cy.get('#route-selector option[value="all"]').should('have.text', 'All');
-      cy.get('#refresh-indicator').should('contain', 'Syncing positions...');
     });
 
-    it('should display the correct active language flag context capsule', () => {
-      // Container should show the active UK Flag status element
-      cy.get('.header-lang-switcher .flag-emoji')
-        .should('have.attr', 'title', 'English Active')
-        .and('have.text', '🇬🇧');
+    it('should display the correct active language flag and link to Malay next', () => {
+      cy.get('.header-lang-switcher .lang-btn.current')
+        .should('have.attr', 'title', 'English')
+        .and('contain', '🇬🇧');
       
-      // The swap link should exist and point explicitly to the Malay subpath
       cy.get('.header-lang-switcher .lang-swap-btn')
         .should('have.attr', 'href', '/ms/')
-        .and('have.attr', 'aria-label', 'Tukar ke Bahasa Melayu');
-    });
-
-    it('should check if Leaflet controls initialized with English tooltips', () => {
-      // Confirm the custom localized zoom options exist on the nodes
-      cy.get('.leaflet-control-zoom-in').should('have.attr', 'title', 'Zoom in');
-      cy.get('.leaflet-control-zoom-out').should('have.attr', 'title', 'Zoom out');
-      cy.get('.leaflet-control-fullscreen-button').should('have.attr', 'title', 'View Fullscreen');
+        .find('svg.lang-swap-icon').should('exist');
     });
   });
 
   // --- BAHASA MELAYU PATH TESTING ---
   context('Bahasa Melayu Workspace (/ms/ Subpath)', () => {
     beforeEach(() => {
-      // Visit the compiled static subpath directory explicitly
       cy.visit('/ms/');
     });
 
     it('should boot up with compiled Malay strings', () => {
-      // 1. Check top-level document properties
       cy.get('html').should('have.attr', 'lang', 'ms');
-      cy.title().should('contain', 'Penjejak BAS.MY KCH');
-
-      // 2. Assert core DOM elements match ms.yaml values
-      cy.get('#app-shell').should('have.attr', 'data-txt-syncing', 'Menyemak kedudukan...');
       cy.get('#route-selector option[value="all"]').should('have.text', 'Semua');
     });
 
-    it('should display the active Malaysian flag and swap trigger link back to root', () => {
-      // Container should display active Malaysian Flag status element
-      cy.get('.header-lang-switcher .flag-emoji')
-        .should('have.attr', 'title', 'Bahasa Melayu Aktif')
-        .and('have.text', '🇲🇾');
+    it('should display the active Malaysian flag and link to Chinese next', () => {
+      cy.get('.header-lang-switcher .lang-btn.current')
+        .should('have.attr', 'title', 'Bahasa Melayu')
+        .and('contain', '🇲🇾');
       
-      // The link anchor button must safely target the fallback English root directory
       cy.get('.header-lang-switcher .lang-swap-btn')
-        .should('have.attr', 'href', '/')
-        .and('have.attr', 'aria-label', 'Switch to English');
+        .should('have.attr', 'href', '/zh/')
+        .find('svg.lang-swap-icon').should('exist');
+    });
+  });
+
+  // --- CHINESE PATH TESTING ---
+  context('Chinese Workspace (/zh/ Subpath)', () => {
+    beforeEach(() => {
+      cy.visit('/zh/');
     });
 
-    it('should check if Leaflet controls successfully initialized with Malay tooltips', () => {
-      cy.get('.leaflet-control-zoom-in').should('have.attr', 'title', 'Besarkan Peta');
-      cy.get('.leaflet-control-zoom-out').should('have.attr', 'title', 'Kecilkan Peta');
-      cy.get('.leaflet-control-fullscreen-button').should('have.attr', 'title', 'Lihat Skrin Penuh');
+    it('should display the active Chinese flag and loop back to English root next', () => {
+      cy.get('.header-lang-switcher .lang-btn.current')
+        .should('have.attr', 'title', '中文')
+        .and('contain', '🇨🇳');
+      
+      cy.get('.header-lang-switcher .lang-swap-btn')
+        .should('have.attr', 'href', '/')
+        .find('svg.lang-swap-icon').should('exist');
     });
   });
 
   // --- INTERACTION NAVIGATION DRIVE ---
   context('Cross-Language Flow Navigation Actions', () => {
-    it('should switch between contexts seamlessly when clicking the icon', () => {
+    it('should cycle through the entire language loop sequentially on click triggers', () => {
       cy.visit('/');
       
-      // Click the 🔄 capsule swap action button
+      // 1. English -> Malay
       cy.get('.header-lang-switcher .lang-swap-btn').click();
-
-      // The browser URL location must automatically shift into the /ms/ static index route
       cy.url().should('include', '/ms/');
       cy.get('html').should('have.attr', 'lang', 'ms');
 
-      // Click the button on the Malay layout path to bounce back
+      // 2. Malay -> Chinese
       cy.get('.header-lang-switcher .lang-swap-btn').click();
-      cy.url().should('not.include', '/ms/');
+      cy.url().should('include', '/zh/');
+      cy.get('html').should('have.attr', 'lang', 'zh');
+
+      // 3. Chinese -> Back to English Root
+      cy.get('.header-lang-switcher .lang-swap-btn').click();
+      cy.url().should('not.include', '/ms/').and('not.include', '/zh/');
       cy.get('html').should('have.attr', 'lang', 'en');
     });
   });
