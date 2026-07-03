@@ -264,6 +264,47 @@ npm run lint
 
 ---
 
+## Environment Variables & Secrets Configuration
+
+This application requires **2 environment variables** to fetch GTFS data from the transit API:
+
+### 1. `STATIC_GTFS_URL`
+**Purpose:** URL endpoint for fetching static GTFS data (routes, schedules, stops, shapes).  
+**Usage:** Referenced by `.devcontainer/scripts/validate-gtfs.js` during the build-time data pipeline initialization. This data is compiled into JSON lookup tables stored in `assets/data/` and `static/data/`.  
+
+### 2. `REALTIME_API_URL`
+**Purpose:** URL endpoint for fetching real-time GTFS vehicle position data (live bus locations).  
+**Usage:** Accessed by the serverless edge function (`functions/api/buses.js`) at runtime to stream live vehicle telemetry to the frontend.  
+
+### Configuration Locations
+
+#### Local Development (`.env`)
+For local development and testing, both environment variables are stored in the [`.env`](.env) file at the project root:
+
+```bash
+STATIC_GTFS_URL="some_gtfs-static_api_url"
+REALTIME_API_URL="some_gtfs-realtime_api_url"
+```
+
+These variables are automatically loaded by Node.js and Wrangler when running local development commands (`run_local.sh`, `run_local_full.sh`, `npm start`).
+
+#### Production Deployment
+Environment variables for production deployment are stored in **two places**:
+
+1. **GitHub Repository Secrets:** Used during the CI/CD pipeline (`.github/workflows/deploy.yml`).
+   - `STATIC_GTFS_URL` is injected as a secret during the "Execute Automated Static Ingestion Script" step.
+   - Other deployment secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) are used to authenticate with Cloudflare Pages.
+
+2. **Cloudflare Dashboard:** Environment variables for the deployed edge function are configured via the Cloudflare Pages project dashboard.
+   - `REALTIME_API_URL` is bound to the `functions/api/buses.js` serverless function and accessed via `context.env.REALTIME_API_URL`.
+   - Production, staging, and preview environments can have different variable bindings.
+
+**To configure secrets for your deployment:**
+- **GitHub:** Go to your repository → Settings → Secrets and variables → Actions → New repository secret
+- **Cloudflare:** Go to your Pages project → Settings → Environment variables
+
+---
+
 ## Production Deployment Pipeline
 This repository is optimized for Cloudflare Pages architecture.
 
