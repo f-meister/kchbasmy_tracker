@@ -1,7 +1,7 @@
 {
   "name": "Kuching Bus Tracker Dev Environment",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
-  
+  "runArgs": ["--env-file", ".env"],
   // Install Hugo, Go, and Protobuf CLI tools natively into the container features layer
   "features": {
     "ghcr.io/devcontainers/features/go:1": {},

@@ -15,7 +15,7 @@ const TEST_FAIL_GTFS_PATH = path.join(projectRoot, 'assets', 'fallback', 'gtfs_f
 const TARGET_GTFS_PATH    = path.join(projectRoot, 'gtfs.zip'); 
 
 // 🇲🇾 Official Malaysia Open API Static Endpoint for mybas Kuching
-const GTFS_API_URL = 'https://api.data.gov.my/gtfs-static/mybas-kuching'; 
+const GTFS_API_URL = process.env.STATIC_GTFS_URL; 
 const requiredFiles = ['routes.txt', 'shapes.txt', 'stop_times.txt', 'stops.txt', 'trips.txt'];
 
 /**

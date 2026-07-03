@@ -33,6 +33,8 @@ jobs:
         run: npm run test:unit
 
       - name: Execute Automated Static Ingestion Script
+        env:
+          STATIC_GTFS_URL: ${{ secrets.STATIC_GTFS_URL }}
         run: bash .devcontainer/setup.sh
 
       - name: Setup Hugo Compiler
@@ -69,7 +71,7 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         # Only allows the deployment block to execute if the build is on the main branch
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref_name == 'dev'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

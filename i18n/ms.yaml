@@ -58,11 +58,11 @@ about_tagline:
 about_features_title:
   other: "Kemas Kini Terbaharu"
 about_features_list_1:
-  other: "26/06/2026: tambah pemilih bahasa + terjemahan Melayu + akhiran kod laluan + dokumentasi, pembetulan data sandaran"
+  other: "04/07/2026: tambah sokongan bahasa zh-MY + bahagian terima kasih khas, penstrukturan semula kod"
 about_features_list_2:
-  other: "14/06/2026: tambah jadual perhentian bas dengan penapisan + peta transit dalam apl + peta skrin penuh"
+  other: "26/06/2026: tambah pemilih bahasa + terjemahan Melayu + akhiran kod laluan + dokumentasi, pembetulan data sandaran"
 about_features_list_3:
-  other: "08/06/2026: tambah penanda geolokasi + pautan ko-fi, pembetulan masalah data API + amaran"
+  other: "14/06/2026: tambah jadual perhentian bas dengan penapisan + peta transit dalam apl + peta skrin penuh"
 about_contact_title:
   other: "Hubungi Kami"
 about_btn_github:
@@ -85,3 +85,7 @@ control_fullscreen_exit:
   other: "Keluar Skrin Penuh"
 control_geolocate:
   other: "Jejak Lokasi Saya"
+modal_thanks_title:
+  other: "Terima Kasih Khas"
+modal_thanks_text:
+  other: "Ribuan terima kasih kepada Andy T, M. Faiz, dan anda semua yang menyokong projek ini!"

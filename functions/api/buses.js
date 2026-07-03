@@ -4,7 +4,7 @@ import mockPayload from '../../data/test/dummy_bus_loc.json';
 export async function onRequest(context) {
   const url = new URL(context.request.url);
   const useMock = url.searchParams.get('mock') === 'true';
-  const API_URL = "https://api.data.gov.my/gtfs-realtime/vehicle-position/mybas-kuching";
+  const API_URL = context.env.REALTIME_API_URL;
 
   // --- EDGE CACHE INTERCEPT LAYER ---
   const cache = caches.default;
