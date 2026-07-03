@@ -291,6 +291,7 @@ These variables are automatically loaded by Node.js and Wrangler when running lo
 #### Production Deployment
 Environment variables for production deployment are stored in **two places**:
 
+
 1. **GitHub Repository Secrets:** Used during the CI/CD pipeline (`.github/workflows/deploy.yml`).
    - `STATIC_GTFS_URL` is injected as a secret during the "Execute Automated Static Ingestion Script" step.
    - Other deployment secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) are used to authenticate with Cloudflare Pages.
@@ -307,6 +308,11 @@ Environment variables for production deployment are stored in **two places**:
 
 ## Production Deployment Pipeline
 This repository is optimized for Cloudflare Pages architecture.
+
+### Transit Deployment Environments
+
+- **Production Environment:** [kchbasmy.fabianhee.com](https://kchbasmy.fabianhee.com) (Deploys tracking changes automatically on pushes to the `main` branch)
+- **Staging / Preview Sandbox:** [dev.kchbasmy-tracker.pages.dev](https://dev.kchbasmy-tracker.pages.dev) (Deploys tracking changes automatically on pushes to the `dev` branch)
 
 - CI/CD Integration: When you push changes to GitHub, Cloudflare Pages intercepts the commit.
 
