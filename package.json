@@ -26,13 +26,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "cypress": "^15.18.0",
-    "eslint": "^9.39.4",
-    "eslint-plugin-cypress": "^6.4.2",
+    "cypress": "^15.19.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-cypress": "^6.4.3",
     "eslint-plugin-vitest": "^0.5.4",
-    "globals": "^17.7.0",
-    "gtfs-realtime-bindings": "^2.1.0",
-    "vitest": "^4.1.9",
-    "wrangler": "^4.107.0"
+    "globals": "^17.8.0",
+    "gtfs-realtime-bindings": "^2.2.0",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.115.0"
   }
 }
