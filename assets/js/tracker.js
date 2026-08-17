@@ -156,5 +156,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRouteDescriptionLabel('all', true);
     syncLiveBusTracker();
     
-    setInterval(syncLiveBusTracker, 60000);
+    setInterval(syncLiveBusTracker, 30000);
 });
