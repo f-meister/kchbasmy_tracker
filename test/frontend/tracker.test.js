@@ -135,6 +135,6 @@ describe('tracker.js - Global App Orchestration Bootstrapper Suite', () => {
     expect(global.window.syncLiveBusTracker).toHaveBeenCalled();
     expect(global.window.renderFilteredBusStops).toHaveBeenCalledWith('all');
     
-    expect(global.setInterval).toHaveBeenCalledWith(global.window.syncLiveBusTracker, 60000);
+    expect(global.setInterval).toHaveBeenCalledWith(global.window.syncLiveBusTracker, 30000);
   });
 });
